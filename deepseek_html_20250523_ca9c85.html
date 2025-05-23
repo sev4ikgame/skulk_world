@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тихий мир | Minecraft сервер</title>
+    <style>
+        /* Основные стили */
+        :root {
+            --primary: #4da6ff;
+            --primary-dark: #1a5c9f;
+            --dark: #0a0a0a;
+            --dark-blue: #121c3a;
+            --darker-blue: #0a0a2a;
+            --light: #e0e0e0;
+        }
+
+        @font-face {
+            font-family: 'Minecraft';
+            src: url('https://fonts.cdnfonts.com/css/minecraft-4');
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--dark);
+            color: var(--light);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Шапка */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 15, 30, 0.8);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 1s ease-out;
+        }
+
+        .logo {
+            font-family: 'Minecraft', sans-serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(77, 166, 255, 0.7);
+            animation: pulse 3s infinite;
+        }
+
+        nav a {
+            color: var(--light);
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Главный экран */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, var(--dark) 0%, var(--dark-blue) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero h1 {
+            font-family: 'Minecraft', sans-serif;
+            font-size: 5rem;
+            color: var(--primary);
+            text-shadow: 
+                0 0 10px rgba(77, 166, 255, 0.7),
+                0 0 20px rgba(26, 92, 159, 0.5);
+            margin-bottom: 1rem;
+            animation: fadeIn 1s ease-out, float 6s ease-in-out infinite;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin-bottom: 2rem;
+            animation: fadeIn 1s ease-out 0.5s forwards;
+            opacity: 0;
+        }
+
+        .cta-button {
+            background: linear-gradient(to right, var(--primary-dark), var(--primary));
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Minecraft', sans-serif;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            box-shadow: 
+                0 4px 15px rgba(26, 92, 159, 0.6),
+                inset 0 0 10px rgba(255, 255, 255, 0.1);
+            animation: fadeIn 1s ease-out 1s forwards;
+            opacity: 0;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 8px 25px rgba(26, 92, 159, 0.8),
+                inset 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Блоки контента */
+        .content-section {
+            padding: 6rem 2rem;
+            background: var(--darker-blue);
+        }
+
+        .section-title {
+            font-family: 'Minecraft', sans-serif;
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 3rem;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(77, 166, 255, 0.5);
+            position: relative;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .info-card {
+            background: rgba(15, 25, 50, 0.6);
+            border-radius: 10px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(77, 166, 255, 0.2);
+            opacity: 0;
+        }
+
+        .info-card:nth-child(odd) {
+            animation: slideInLeft 1s ease-out forwards;
+        }
+
+        .info-card:nth-child(even) {
+            animation: slideInRight 1s ease-out forwards;
+        }
+
+        .info-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary);
+        }
+
+        .info-card h3 {
+            font-family: 'Minecraft', sans-serif;
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Галерея */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .gallery-item {
+            border-radius: 10px;
+            overflow: hidden;
+            height: 200px;
+            position: relative;
+            transition: all 0.5s ease;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        /* Подвал */
+        footer {
+            background: var(--dark);
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(77, 166, 255, 0.2);
+        }
+
+        .footer-logo {
+            font-family: 'Minecraft', sans-serif;
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        /* Декоративные элементы */
+        .pixel {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            opacity: 0.3;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(77, 166, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: -1;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .blob-1 {
+            top: -200px;
+            left: -200px;
+        }
+
+        .blob-2 {
+            bottom: -200px;
+            right: -200px;
+            animation-delay: 0.5s;
+        }
+
+        /* Анимации при скролле */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .animate-on-scroll.animated {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3.5rem;
+            }
+            
+            .section-title {
+                font-size: 2.5rem;
+            }
+            
+            nav {
+                display: none;
+            }
+            
+            .info-grid, .gallery {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Декоративные элементы -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    
+    <!-- Шапка -->
+    <header>
+        <div class="logo">Тихий мир</div>
+        <nav>
+            <a href="#main">Главная</a>
+            <a href="#about">О сервере</a>
+            <a href="#gallery">Галерея</a>
+            <a href="#join">Присоединиться</a>
+        </nav>
+    </header>
+
+    <!-- Главный экран -->
+    <section class="hero" id="main">
+        <h1>ТИХИЙ МИР</h1>
+        <p>Уникальный Minecraft сервер с атмосферой спокойствия и уюта</p>
+        <button class="cta-button">Присоединиться</button>
+        
+        <!-- Декоративные пиксели -->
+        <div class="pixel" style="top: 20%; left: 10%; animation-delay: 0.2s;"></div>
+        <div class="pixel" style="top: 70%; left: 15%; animation-delay: 0.4s;"></div>
+        <div class="pixel" style="top: 40%; left: 85%; animation-delay: 0.6s;"></div>
+        <div class="pixel" style="top: 80%; left: 90%; animation-delay: 0.8s;"></div>
+    </section>
+
+    <!-- О сервере -->
+    <section class="content-section" id="about">
+        <h2 class="section-title animate-on-scroll">О СЕРВЕРЕ</h2>
+        <div class="info-grid">
+            <div class="info-card animate-on-scroll" style="animation-delay: 0.2s;">
+                <h3>АТМОСФЕРА</h3>
+                <p>Уютный сервер с дружелюбным комьюнити и приятной атмосферой для спокойной игры.</p>
+            </div>
+            <div class="info-card animate-on-scroll" style="animation-delay: 0.4s;">
+                <h3>ВАНИЛЬ+</h3>
+                <p>Классическое выживание с небольшими улучшениями для большего комфорта.</p>
+            </div>
+            <div class="info-card animate-on-scroll" style="animation-delay: 0.6s;">
+                <h3>ЗАЩИТА</h3>
+                <p>Надежная система защиты территорий и регулярные бэкапы мира.</p>
+            </div>
+            <div class="info-card animate-on-scroll" style="animation-delay: 0.8s;">
+                <h3>СОБЫТИЯ</h3>
+                <p>Регулярные ивенты, конкурсы и другие активности для игроков.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Галерея -->
+    <section class="content-section" id="gallery" style="background: var(--dark-blue);">
+        <h2 class="section-title animate-on-scroll">ГАЛЕРЕЯ</h2>
+        <div class="gallery">
+            <div class="gallery-item animate-on-scroll" style="animation-delay: 0.2s;">
+                <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Спавн" alt="Спавн сервера">
+            </div>
+            <div class="gallery-item animate-on-scroll" style="animation-delay: 0.4s;">
+                <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Город" alt="Город игроков">
+            </div>
+            <div class="gallery-item animate-on-scroll" style="animation-delay: 0.6s;">
+                <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Ивент" alt="Ивент на сервере">
+            </div>
+            <div class="gallery-item animate-on-scroll" style="animation-delay: 0.8s;">
+                <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Постройки" alt="Постройки игроков">
+            </div>
+            <div class="gallery-item animate-on-scroll" style="animation-delay: 1s;">
+                <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Природа" alt="Природа сервера">
+            </div>
+            <div class="gallery-item animate-on-scroll" style="animation-delay: 1.2s;">
+                <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Ночь" alt="Ночной пейзаж">
+            </div>
+        </div>
+    </section>
+
+    <!-- Присоединиться -->
+    <section class="content-section" id="join">
+        <h2 class="section-title animate-on-scroll">КАК ИГРАТЬ</h2>
+        <div class="info-grid">
+            <div class="info-card animate-on-scroll" style="animation-delay: 0.2s;">
+                <h3>IP АДРЕС</h3>
+                <p>play.quietworld.ru</p>
+                <p>Версия: 1.20.1</p>
+            </div>
+            <div class="info-card animate-on-scroll" style="animation-delay: 0.4s;">
+                <h3>ПРАВИЛА</h3>
+                <p>1. Не гриферить</p>
+                <p>2. Уважать других</p>
+                <p>3. Не использовать читы</p>
+            </div>
+            <div class="info-card animate-on-scroll" style="animation-delay: 0.6s;">
+                <h3>DISCORD</h3>
+                <p>Присоединяйтесь к нашему Discord-сообществу</p>
+                <button class="cta-button" style="padding: 0.5rem 1.5rem; font-size: 1rem; margin-top: 1rem;">Вступить</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Подвал -->
+    <footer>
+        <div class="footer-logo">Тихий мир</div>
+        <p>© 2023 Minecraft сервер. Все права защищены.</p>
+    </footer>
+
+    <script>
+        // Анимации при скролле
+        const animateElements = document.querySelectorAll('.animate-on-scroll');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animated');
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        animateElements.forEach(el => observer.observe(el));
+
+        // Плавная прокрутка для ссылок
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Анимация кнопки "Присоединиться" в герое
+        const ctaButton = document.querySelector('.hero .cta-button');
+        ctaButton.addEventListener('click', function() {
+            document.getElementById('join').scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    </script>
+</body>
+</html>
