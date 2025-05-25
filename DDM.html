@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BotCraft — Мобильный платформер</title>
+    <title>BotCraft — Платформер с лифтами</title>
     <style>
+        /* Стили остаются такими же, как в предыдущей версии */
         body {
             margin: 0;
             padding: 0;
@@ -53,7 +54,6 @@
             margin: 5px 0;
         }
         
-        /* Меню игры */
         .game-menu {
             position: fixed;
             top: 0;
@@ -150,7 +150,6 @@
             opacity: 0.5;
         }
         
-        /* Мобильное управление */
         .mobile-controls {
             display: flex;
             justify-content: space-between;
@@ -192,7 +191,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Мобильный платформер</h1>
+        <h1>Платформер с лифтами</h1>
         <canvas id="gameCanvas" width="1200" height="600"></canvas>
         <div class="game-info">
             <div class="health-bar" id="healthBar">
@@ -204,7 +203,6 @@
             <p class="controls-info">Управление: кнопки ниже или клавиатура</p>
         </div>
         
-        <!-- Мобильное управление -->
         <div class="mobile-controls">
             <button class="mobile-btn" id="leftBtn">←</button>
             <button class="mobile-btn" id="jumpBtn">↑</button>
@@ -212,16 +210,14 @@
         </div>
     </div>
     
-    <!-- Меню начала игры -->
     <div class="game-menu active" id="startMenu">
         <div class="game-menu-content">
-            <h2>Платформер BotCraft</h2>
-            <p>Собирайте монеты, избегайте врагов!</p>
+            <h2>Платформер с лифтами</h2>
+            <p>Используйте лифты, чтобы подниматься выше!</p>
             <button class="game-btn" id="startBtn">Начать игру</button>
         </div>
     </div>
     
-    <!-- Меню проигрыша -->
     <div class="game-menu" id="gameOverMenu">
         <div class="game-menu-content">
             <h2>Игра окончена!</h2>
@@ -231,7 +227,6 @@
     </div>
 
     <script>
-        // Инициализация игры
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('gameScore');
@@ -242,28 +237,30 @@
         const restartBtn = document.getElementById('restartBtn');
         const healthBar = document.getElementById('healthBar');
         
-        // Мобильные кнопки
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
         const jumpBtn = document.getElementById('jumpBtn');
         
-        // Настройки игры
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
         const config = {
             cameraSmoothing: 0.1,
-            playerSpeed: 5,
-            playerJumpForce: 12,
-            gravity: 0.5,
-            maxJumps: 1, // Только один прыжок
+            playerSpeed: isMobile ? 5 : 2,
+            playerJumpForce: isMobile ? 8 : 5, // Еще более медленный прыжок на ПК
+            gravity: isMobile ? 0.5 : 0.3,
+            maxJumps: 1,
             deathHeight: 700,
             maxHealth: 3,
             enemySpawnChance: 0.5,
             coinSpawnInterval: 1000,
             invincibilityDuration: 60,
-            platformSpacing: 150, // Расстояние между платформами
-            maxPlatformHeightDiff: 120 // Макс. разница высот между платформами
+            platformSpacing: 150,
+            maxPlatformHeightDiff: 120,
+            enemySpeed: isMobile ? 0.7 : 0.3,
+            liftSpeed: 1.5, // Скорость движения лифта
+            liftHeight: 100 // Высота, на которую поднимает лифт
         };
         
-        // Настройки камеры
         const camera = {
             x: 0,
             y: 0,
@@ -279,7 +276,6 @@
             lastY: 0
         };
         
-        // Установка размеров отображения
         function resizeCanvas() {
             const maxWidth = window.innerWidth * 0.95;
             const maxHeight = window.innerHeight * 0.6;
@@ -295,28 +291,69 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
         
-        // Игровые объекты
-        let player, platforms, coins, enemies, score, gameActive, currentJumps, health;
+        let player, platforms, coins, enemies, lifts, score, gameActive, currentJumps, health;
         
-        // Создаем достижимые платформы
         function createPlatforms() {
             platforms = [];
+            lifts = [];
             
             // Первая платформа
             platforms.push({ x: 0, y: 550, width: 200, height: 20 });
             
-            // Генерация последующих платформ
             let lastX = 0;
             let lastY = 550;
             let lastWidth = 200;
+            let platformCount = 0;
+            let currentLevel = 0;
+            const maxLevel = 3;
             
-            for (let i = 0; i < 15; i++) {
-                // Новая позиция платформы
+            for (let i = 0; i < 25; i++) {
+                platformCount++;
+                
+                // Каждые 4 платформы создаем лифт
+                if (platformCount > 4 && currentLevel < maxLevel && Math.random() > 0.4) {
+                    const liftX = lastX + lastWidth + 50;
+                    const liftY = lastY - 20;
+                    const liftWidth = 60;
+                    const liftHeight = 10;
+                    const targetY = liftY - config.liftHeight;
+                    
+                    lifts.push({
+                        x: liftX,
+                        y: liftY,
+                        width: liftWidth,
+                        height: liftHeight,
+                        originalY: liftY,
+                        targetY: targetY,
+                        speed: config.liftSpeed,
+                        movingUp: false,
+                        active: false,
+                        color: '#8a5beb'
+                    });
+                    
+                    // Платформа над лифтом
+                    platforms.push({
+                        x: liftX,
+                        y: targetY - 20,
+                        width: liftWidth,
+                        height: 20
+                    });
+                    
+                    lastX = liftX;
+                    lastY = targetY - 20;
+                    lastWidth = liftWidth;
+                    i++; // Учитываем добавленную платформу
+                    continue;
+                }
+                
+                // Обычная платформа
                 const newX = lastX + lastWidth + config.platformSpacing;
+                const maxY = 550 - (currentLevel * 120);
+                const minY = 100;
                 const newY = Math.max(
-                    100,
+                    minY,
                     Math.min(
-                        550,
+                        maxY,
                         lastY + (Math.random() * 2 - 1) * config.maxPlatformHeightDiff
                     )
                 );
@@ -335,9 +372,7 @@
             }
         }
         
-        // Инициализация игры
         function initGame() {
-            // Игрок
             player = {
                 x: 100,
                 y: 500,
@@ -349,26 +384,23 @@
                 isJumping: false,
                 color: '#5b6ceb',
                 invincible: false,
-                blinkTimer: 0
+                blinkTimer: 0,
+                onLift: null
             };
             
-            // Платформы (гарантированно достижимые)
             createPlatforms();
             
-            // Монеты
             coins = [];
             for (let i = 0; i < 15; i++) {
                 spawnCoin();
             }
             
-            // Противники (замедленные)
             enemies = [];
             const enemyTypes = [
-                { color: '#ff4757', speed: 0.7, size: 25, damage: 1 },
-                { color: '#ff6348', speed: 0.9, size: 20, damage: 1 }
+                { color: '#ff4757', speed: config.enemySpeed, size: 25, damage: 1 },
+                { color: '#ff6348', speed: config.enemySpeed * 1.3, size: 20, damage: 1 }
             ];
             
-            // Создаем противников на платформах (кроме самых нижних)
             platforms.forEach(platform => {
                 if (Math.random() > (1 - config.enemySpawnChance) && platform.y < 500) {
                     const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
@@ -385,7 +417,6 @@
                 }
             });
             
-            // Игровые переменные
             score = 0;
             gameActive = true;
             currentJumps = 0;
@@ -393,18 +424,15 @@
             scoreElement.textContent = `Счет: ${score}`;
             updateHealthBar();
             
-            // Начальная позиция камеры
             camera.x = player.x - camera.width / 2 / camera.zoom;
             camera.y = player.y - camera.height / 2 / camera.zoom;
             camera.targetX = camera.x;
             camera.targetY = camera.y;
             
-            // Показать стартовое меню
             showMenu(null);
         }
         
         function spawnCoin() {
-            // Размещаем монеты только на платформах
             const platform = platforms[Math.floor(Math.random() * platforms.length)];
             coins.push({
                 x: platform.x + Math.random() * (platform.width - 20),
@@ -433,7 +461,6 @@
             if (menu) menu.classList.add('active');
         }
         
-        // Обработчики событий
         startBtn.addEventListener('click', () => {
             showMenu(null);
             initGame();
@@ -444,7 +471,6 @@
             initGame();
         });
         
-        // Клавиатура
         const keys = {
             left: false,
             right: false
@@ -467,7 +493,6 @@
             if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
         });
         
-        // Мобильное управление
         leftBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             keys.left = true;
@@ -495,7 +520,6 @@
             }
         });
         
-        // Для кнопок мыши (на случай тачпадов)
         leftBtn.addEventListener('mousedown', () => keys.left = true);
         leftBtn.addEventListener('mouseup', () => keys.left = false);
         leftBtn.addEventListener('mouseleave', () => keys.left = false);
@@ -512,7 +536,69 @@
             }
         });
         
-        // Обновление камеры
+        function updateLifts() {
+            lifts.forEach(lift => {
+                // Проверка, стоит ли игрок на лифте
+                if (player.x + player.width > lift.x &&
+                    player.x < lift.x + lift.width &&
+                    player.y + player.height >= lift.y &&
+                    player.y + player.height <= lift.y + lift.height / 2 &&
+                    player.velocityY >= 0) {
+                    
+                    // Активируем лифт, если он еще не активен
+                    if (!lift.active) {
+                        lift.active = true;
+                        lift.movingUp = true;
+                    }
+                    
+                    // Привязываем игрока к лифту
+                    player.onLift = lift;
+                    player.y = lift.y - player.height;
+                    player.velocityY = 0;
+                    player.isJumping = false;
+                    currentJumps = 0;
+                }
+                
+                // Движение лифта
+                if (lift.active) {
+                    if (lift.movingUp) {
+                        lift.y -= lift.speed;
+                        if (lift.y <= lift.targetY) {
+                            lift.y = lift.targetY;
+                            lift.movingUp = false;
+                            lift.active = false;
+                            
+                            // Отцепляем игрока от лифта
+                            if (player.onLift === lift) {
+                                player.onLift = null;
+                            }
+                        }
+                    } else {
+                        lift.y += lift.speed;
+                        if (lift.y >= lift.originalY) {
+                            lift.y = lift.originalY;
+                            lift.active = false;
+                            
+                            // Отцепляем игрока от лифта
+                            if (player.onLift === lift) {
+                                player.onLift = null;
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Если игрок больше не на лифте, сбрасываем ссылку
+            if (player.onLift) {
+                const lift = player.onLift;
+                if (player.x + player.width < lift.x || 
+                    player.x > lift.x + lift.width ||
+                    player.y + player.height < lift.y) {
+                    player.onLift = null;
+                }
+            }
+        }
+        
         function updateCamera() {
             if (!camera.isDragging) {
                 camera.targetX = player.x - camera.width / 2 / camera.zoom;
@@ -522,17 +608,17 @@
             camera.x += (camera.targetX - camera.x) * config.cameraSmoothing;
             camera.y += (camera.targetY - camera.y) * config.cameraSmoothing;
             
-            // Ограничение камеры
             camera.x = Math.max(0, Math.min(camera.x, canvas.width - camera.width / camera.zoom));
             camera.y = Math.max(0, Math.min(camera.y, canvas.height - camera.height / camera.zoom));
         }
         
-        // Физика игры
         function applyGravity() {
+            // Если игрок на лифте, гравитация не действует
+            if (player.onLift) return;
+            
             player.velocityY += config.gravity;
             player.y += player.velocityY;
             
-            // Проверка столкновения с платформами
             let onGround = false;
             platforms.forEach(platform => {
                 if (player.x + player.width > platform.x &&
@@ -549,7 +635,6 @@
                 }
             });
             
-            // Проверка падения за пределы экрана
             if (player.y > config.deathHeight) {
                 gameOver();
                 return;
@@ -565,7 +650,6 @@
             }
         }
         
-        // Движение игрока
         function movePlayer() {
             if (!gameActive) return;
             
@@ -577,7 +661,6 @@
             }
         }
         
-        // Движение противников
         function moveEnemies() {
             enemies.forEach(enemy => {
                 enemy.x += enemy.speed;
@@ -592,7 +675,6 @@
             });
         }
         
-        // Проверка столкновений с врагами
         function checkEnemyCollisions() {
             if (player.invincible || !gameActive) return;
             
@@ -623,7 +705,6 @@
             }
         }
         
-        // Анимация мигания
         function updateInvincibility() {
             if (player.invincible) {
                 player.blinkTimer--;
@@ -633,7 +714,6 @@
             }
         }
         
-        // Проверка сбора монет
         function checkCoins() {
             for (let i = coins.length - 1; i >= 0; i--) {
                 const coin = coins[i];
@@ -653,7 +733,6 @@
             }
         }
         
-        // Конец игры
         function gameOver() {
             if (!gameActive) return;
             
@@ -662,7 +741,6 @@
             showMenu(gameOverMenu);
         }
         
-        // Отрисовка игры
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
@@ -670,13 +748,27 @@
             ctx.scale(camera.zoom, camera.zoom);
             ctx.translate(-camera.x, -camera.y);
             
-            // Отрисовка платформ
+            // Платформы
             ctx.fillStyle = '#4a5568';
             platforms.forEach(platform => {
                 ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
             });
             
-            // Отрисовка монет
+            // Лифты
+            lifts.forEach(lift => {
+                ctx.fillStyle = lift.color;
+                ctx.fillRect(lift.x, lift.y, lift.width, lift.height);
+                
+                // Рисуем "канат" лифта
+                ctx.strokeStyle = '#5b6ceb';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(lift.x + lift.width/2, lift.y);
+                ctx.lineTo(lift.x + lift.width/2, 0);
+                ctx.stroke();
+            });
+            
+            // Монеты
             ctx.fillStyle = '#FFD700';
             coins.forEach(coin => {
                 if (!coin.collected) {
@@ -687,12 +779,11 @@
                 }
             });
             
-            // Отрисовка противников
+            // Враги
             enemies.forEach(enemy => {
                 ctx.fillStyle = enemy.color;
                 ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
                 
-                // Глаза для визуализации направления
                 ctx.fillStyle = 'white';
                 ctx.beginPath();
                 ctx.arc(
@@ -704,7 +795,7 @@
                 ctx.closePath();
             });
             
-            // Отрисовка игрока
+            // Игрок
             if (gameActive && (!player.invincible || Math.floor(Date.now() / 100) % 2 === 0)) {
                 ctx.fillStyle = player.color;
                 ctx.fillRect(player.x, player.y, player.width, player.height);
@@ -712,15 +803,15 @@
             
             ctx.restore();
             
-            // Отрисовка счета
+            // Счет
             ctx.fillStyle = 'white';
             ctx.font = '20px Arial';
             ctx.fillText(`Счет: ${score}`, 20, 30);
         }
         
-        // Игровой цикл
         function gameLoop() {
             if (gameActive) {
+                updateLifts();
                 updateCamera();
                 applyGravity();
                 movePlayer();
@@ -733,7 +824,6 @@
             requestAnimationFrame(gameLoop);
         }
         
-        // Запуск игры
         initGame();
         gameLoop();
     </script>
