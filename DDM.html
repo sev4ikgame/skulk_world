@@ -1,504 +1,224 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тихий мир | Рукописный Minecraft сервер</title>
-    <style>
-        /* Сброс стилей */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* Основные стили */
-        body {
-            font-family: 'Courier New', monospace;
-            background-color: #0a0a12;
-            color: #e0e0e0;
-            line-height: 1.6;
-            overflow-x: hidden;
-            background-image: 
-                linear-gradient(rgba(10, 15, 30, 0.9), rgba(10, 15, 30, 0.9)),
-                url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="5" height="5" x="0" y="0" fill="%231a3a5c" opacity="0.3"/></svg>');
-            background-size: 20px 20px;
-        }
-
-        /* Рукописные шрифты */
-        @font-face {
-            font-family: 'MinecraftHand';
-            src: url('https://www.dafontfree.net/data/10/3/10385/Minecraftia-Regular.ttf') format('truetype');
-        }
-
-        /* Контейнер */
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 20px;
-            position: relative;
-        }
-
-        /* Шапка */
-        header {
-            padding: 30px 0;
-            border-bottom: 3px dashed #4da6ff;
-            margin-bottom: 40px;
-            position: relative;
-        }
-
-        header::before {
-            content: "";
-            position: absolute;
-            bottom: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 20px;
-            background: radial-gradient(ellipse, rgba(77,166,255,0.5) 0%, rgba(77,166,255,0) 70%);
-        }
-
-        .logo {
-            font-family: 'MinecraftHand', cursive;
-            font-size: 3.5rem;
-            color: #4da6ff;
-            text-align: center;
-            text-shadow: 3px 3px 0 #1a3a5c;
-            letter-spacing: 3px;
-            position: relative;
-            display: inline-block;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .logo::after {
-            content: "";
-            position: absolute;
-            bottom: -10px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(to right, transparent, #4da6ff, transparent);
-        }
-
-        /* Навигация */
-        nav {
-            display: flex;
-            justify-content: center;
-            margin-top: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .nav-btn {
-            font-family: 'MinecraftHand', cursive;
-            font-size: 1.2rem;
-            color: #e0e0e0;
-            background: #1a3a5c;
-            border: 2px solid #4da6ff;
-            padding: 8px 20px;
-            border-radius: 0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-btn:hover {
-            background: #4da6ff;
-            color: #0a0a12;
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(77,166,255,0.4);
-        }
-
-        .nav-btn::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: 0.5s;
-        }
-
-        .nav-btn:hover::before {
-            left: 100%;
-        }
-
-        /* Основной контент */
-        .main-content {
-            padding: 40px 0;
-        }
-
-        .section {
-            margin-bottom: 60px;
-            padding: 30px;
-            background: rgba(15, 25, 50, 0.7);
-            border: 2px solid #1a5c9f;
-            border-radius: 5px;
-            box-shadow: 0 0 20px rgba(26, 92, 159, 0.2);
-            position: relative;
-        }
-
-        .section::before {
-            content: "";
-            position: absolute;
-            top: -5px;
-            left: -5px;
-            right: -5px;
-            bottom: -5px;
-            border: 1px dashed #4da6ff;
-            border-radius: 7px;
-            pointer-events: none;
-            opacity: 0.5;
-        }
-
-        .section-title {
-            font-family: 'MinecraftHand', cursive;
-            font-size: 2.2rem;
-            color: #4da6ff;
-            margin-bottom: 25px;
-            padding-bottom: 10px;
-            border-bottom: 2px dotted #4da6ff;
-            text-shadow: 2px 2px 0 #1a3a5c;
-        }
-
-        .section-text {
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-        }
-
-        /* Список особенностей */
-        .features-list {
-            list-style-type: none;
-        }
-
-        .features-list li {
-            position: relative;
-            padding-left: 30px;
-            margin-bottom: 15px;
-        }
-
-        .features-list li::before {
-            content: "■";
-            position: absolute;
-            left: 0;
-            color: #4da6ff;
-            font-size: 1.5rem;
-            line-height: 1;
-        }
-
-        /* Галерея */
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .gallery-item {
-            border: 3px solid #1a3a5c;
-            border-radius: 5px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .gallery-item:hover {
-            transform: scale(1.03);
-            border-color: #4da6ff;
-            box-shadow: 0 0 20px rgba(77,166,255,0.5);
-        }
-
-        .gallery-item img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            display: block;
-        }
-
-        /* Форма подключения */
-        .connect-box {
-            background: rgba(26, 92, 159, 0.3);
-            padding: 25px;
-            border-radius: 5px;
-            margin-top: 30px;
-            border: 1px dashed #4da6ff;
-        }
-
-        .server-ip {
-            font-family: 'MinecraftHand', cursive;
-            font-size: 1.8rem;
-            color: #4da6ff;
-            text-align: center;
-            margin: 20px 0;
-            padding: 10px;
-            background: rgba(10, 15, 30, 0.7);
-            border: 2px solid #4da6ff;
-            border-radius: 5px;
-        }
-
-        /* Подвал */
-        footer {
-            text-align: center;
-            padding: 30px 0;
-            margin-top: 60px;
-            border-top: 3px dashed #4da6ff;
-            position: relative;
-        }
-
-        footer::before {
-            content: "";
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 20px;
-            background: radial-gradient(ellipse, rgba(77,166,255,0.5) 0%, rgba(77,166,255,0) 70%);
-        }
-
-        .footer-text {
-            font-size: 0.9rem;
-            color: #7a7a7a;
-        }
-
-        /* Декоративные элементы */
-        .pixel {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #4da6ff;
-            opacity: 0.5;
-        }
-
-        .hand-drawn-line {
-            height: 2px;
-            background: linear-gradient(to right, transparent, #4da6ff, transparent);
-            margin: 30px 0;
-            position: relative;
-        }
-
-        .hand-drawn-line::before,
-        .hand-drawn-line::after {
-            content: "";
-            position: absolute;
-            top: -5px;
-            width: 10px;
-            height: 10px;
-            background: #4da6ff;
-            border-radius: 50%;
-        }
-
-        .hand-drawn-line::before {
-            left: 0;
-        }
-
-        .hand-drawn-line::after {
-            right: 0;
-        }
-
-        /* Анимации */
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .floating {
-            animation: float 4s ease-in-out infinite;
-        }
-
-        /* Адаптивность */
-        @media (max-width: 768px) {
-            .logo {
-                font-size: 2.5rem;
-            }
+<!-- Весь предыдущий код остается без изменений до footer -->
+    
+    <footer>
+        <div class="container">
+            <!-- Предыдущее содержимое футера -->
             
-            .section {
-                padding: 20px;
-            }
-            
-            .section-title {
-                font-size: 1.8rem;
-            }
-            
-            .gallery {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Декоративные пиксели -->
-    <div class="pixel" style="top: 10%; left: 5%;"></div>
-    <div class="pixel" style="top: 80%; left: 90%;"></div>
-    <div class="pixel" style="top: 30%; left: 15%;"></div>
-    <div class="pixel" style="top: 60%; left: 85%;"></div>
-
-    <div class="container">
-        <!-- Шапка -->
-        <header>
-            <div class="logo floating">Тихий мир</div>
-            <nav>
-                <button class="nav-btn" onclick="scrollToSection('about')">О сервере</button>
-                <button class="nav-btn" onclick="scrollToSection('features')">Особенности</button>
-                <button class="nav-btn" onclick="scrollToSection('gallery')">Галерея</button>
-                <button class="nav-btn" onclick="scrollToSection('connect')">Подключиться</button>
-            </nav>
-        </header>
-
-        <!-- Основной контент -->
-        <main class="main-content">
-            <section id="about" class="section">
-                <h2 class="section-title">Добро пожаловать</h2>
-                <p class="section-text">
-                    Приветствуем вас на официальном сайте Minecraft сервера "Тихий мир"! 
-                    Это место, где царит атмосфера спокойствия и уюта, где каждый может 
-                    найти свой уголок и построить что-то уникальное.
-                </p>
-                <p class="section-text">
-                    Наш сервер работает с 2020 года и за это время собрал замечательное 
-                    сообщество игроков, которые ценят качественный геймплей и дружескую 
-                    атмосферу.
-                </p>
-                
-                <div class="hand-drawn-line"></div>
-                
-                <p class="section-text">
-                    Мы предлагаем ванильное выживание с небольшими улучшениями, которые 
-                    делают игру интереснее, но не нарушают баланс. Здесь вы можете строить, 
-                    исследовать, торговать и участвовать в различных событиях.
-                </p>
-            </section>
-
-            <section id="features" class="section">
-                <h2 class="section-title">Наши особенности</h2>
-                <ul class="features-list">
-                    <li><strong>Ванильное выживание</strong> с небольшими улучшениями для комфорта</li>
-                    <li><strong>Защита территорий</strong> - ваши постройки в безопасности</li>
-                    <li><strong>Экономика</strong> - торговля между игроками и магазины</li>
-                    <li><strong>Регулярные ивенты</strong> - конкурсы, праздники, мини-игры</li>
-                    <li><strong>Дружелюбное сообщество</strong> без гриферов и токсичности</li>
-                    <li><strong>Техническая поддержка</strong> - всегда готовы помочь</li>
-                    <li><strong>Бэкапы</strong> - регулярное сохранение мира</li>
-                </ul>
-            </section>
-
-            <section id="gallery" class="section">
-                <h2 class="section-title">Галерея</h2>
-                <p class="section-text">
-                    Посмотрите, как выглядит наш сервер и постройки наших игроков:
-                </p>
-                
-                <div class="gallery">
-                    <div class="gallery-item">
-                        <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Главный+спавн" alt="Главный спавн">
-                    </div>
-                    <div class="gallery-item">
-                        <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Город+игроков" alt="Город игроков">
-                    </div>
-                    <div class="gallery-item">
-                        <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Ивент+по+PvP" alt="Ивент по PvP">
-                    </div>
-                    <div class="gallery-item">
-                        <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Природный+биом" alt="Природный биом">
-                    </div>
-                    <div class="gallery-item">
-                        <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Арена+событий" alt="Арена событий">
-                    </div>
-                    <div class="gallery-item">
-                        <img src="https://via.placeholder.com/600x400/121c3a/4da6ff?text=Ночной+пейзаж" alt="Ночной пейзаж">
-                    </div>
+            <div class="game-container" style="margin-top: 50px; text-align: center;">
+                <h3 style="color: white; margin-bottom: 20px;">Мини-платформер: Собери монеты!</h3>
+                <canvas id="gameCanvas" width="800" height="400" 
+                        style="background: #2d3748; border-radius: 8px; max-width: 100%;"></canvas>
+                <div style="margin-top: 15px; color: #a0aec0;">
+                    <p>Управление: ← → для движения, Пробел для прыжка</p>
+                    <p id="gameScore" style="font-weight: bold; color: white;">Счет: 0</p>
+                    <p id="gameOver" style="font-weight: bold; color: #ff4757; display: none;">Игра окончена! Обновите страницу, чтобы начать заново.</p>
                 </div>
-            </section>
-
-            <section id="connect" class="section">
-                <h2 class="section-title">Как подключиться</h2>
-                <p class="section-text">
-                    Присоединиться к нашему серверу очень просто. Следуйте этим шагам:
-                </p>
-                
-                <ol style="margin-left: 20px; margin-bottom: 20px;">
-                    <li style="margin-bottom: 10px;">Запустите Minecraft Java Edition (версия 1.20.1)</li>
-                    <li style="margin-bottom: 10px;">Нажмите "Сетевая игра"</li>
-                    <li style="margin-bottom: 10px;">Выберите "Добавить сервер"</li>
-                    <li style="margin-bottom: 10px;">Введите IP-адрес нашего сервера:</li>
-                </ol>
-                
-                <div class="connect-box">
-                    <div class="server-ip">play.quietworld.ru</div>
-                    <p style="text-align: center;">
-                        Нажмите "Готово" и подключитесь к серверу!
-                    </p>
-                </div>
-                
-                <div class="hand-drawn-line"></div>
-                
-                <p class="section-text" style="text-align: center;">
-                    Есть вопросы? Присоединяйтесь к нашему Discord-сообществу!
-                    <br>
-                    <button class="nav-btn" style="margin-top: 15px; display: inline-block;">Discord сервер</button>
-                </p>
-            </section>
-        </main>
-
-        <!-- Подвал -->
-        <footer>
-            <p class="footer-text">© 2023 Minecraft сервер "Тихий мир"</p>
-            <p class="footer-text">Все права защищены. Не аффилирован с Mojang Studios.</p>
-            <p class="footer-text" style="margin-top: 15px;">Сделано вручную с ♥ для игроков</p>
-        </footer>
-    </div>
+            </div>
+            
+            <div class="copyright">
+                <p>© 2023 BotCraft. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
 
     <script>
-        // Плавная прокрутка
-        function scrollToSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            if (section) {
-                window.scrollTo({
-                    top: section.offsetTop - 80,
-                    behavior: 'smooth'
-                });
+        // Инициализация игры
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('gameScore');
+        const gameOverElement = document.getElementById('gameOver');
+        
+        // Размеры игрока
+        const player = {
+            x: 50,
+            y: 350,
+            width: 30,
+            height: 30,
+            speed: 4, // Уменьшенная скорость
+            jumpForce: 10, // Уменьшенная сила прыжка
+            velocityY: 0,
+            isJumping: false,
+            color: '#5b6ceb'
+        };
+        
+        // Платформы
+        const platforms = [
+            { x: 0, y: 380, width: 200, height: 20 },
+            { x: 250, y: 350, width: 150, height: 20 },
+            { x: 450, y: 320, width: 150, height: 20 },
+            { x: 650, y: 290, width: 150, height: 20 },
+            { x: 300, y: 220, width: 100, height: 20 },
+            { x: 150, y: 180, width: 100, height: 20 },
+            { x: 500, y: 150, width: 100, height: 20 },
+            { x: 200, y: 100, width: 100, height: 20 },
+            { x: 600, y: 70, width: 100, height: 20 }
+        ];
+        
+        // Монеты
+        const coins = [];
+        for (let i = 0; i < 8; i++) {
+            coins.push({
+                x: Math.random() * (canvas.width - 20),
+                y: Math.random() * (canvas.height - 150),
+                radius: 10,
+                color: '#FFD700',
+                collected: false
+            });
+        }
+        
+        // Игровые переменные
+        let score = 0;
+        let gameActive = true;
+        let keys = {
+            left: false,
+            right: false,
+            space: false
+        };
+        
+        // Обработчики событий
+        window.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+            
+            if (e.key === 'ArrowLeft') keys.left = true;
+            if (e.key === 'ArrowRight') keys.right = true;
+            if (e.key === ' ' && !player.isJumping) {
+                player.velocityY = -player.jumpForce;
+                player.isJumping = true;
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft') keys.left = false;
+            if (e.key === 'ArrowRight') keys.right = false;
+        });
+        
+        // Физика игры
+        function applyGravity() {
+            player.velocityY += 0.4; // Уменьшенная гравитация
+            player.y += player.velocityY;
+            
+            // Проверка столкновения с платформами
+            let onGround = false;
+            platforms.forEach(platform => {
+                if (player.x + player.width > platform.x &&
+                    player.x < platform.x + platform.width &&
+                    player.y + player.height >= platform.y &&
+                    player.y + player.height <= platform.y + platform.height / 2 &&
+                    player.velocityY > 0) {
+                    
+                    player.y = platform.y - player.height;
+                    player.velocityY = 0;
+                    player.isJumping = false;
+                    onGround = true;
+                }
+            });
+            
+            // Проверка падения за пределы экрана
+            if (player.y > canvas.height) {
+                gameOver();
+            }
+            
+            if (!onGround && player.y + player.height < canvas.height) {
+                player.isJumping = true;
+            } else if (!onGround && player.y + player.height >= canvas.height) {
+                player.y = canvas.height - player.height;
+                player.velocityY = 0;
+                player.isJumping = false;
             }
         }
-
-        // Случайное движение пикселей
-        const pixels = document.querySelectorAll('.pixel');
-        pixels.forEach(pixel => {
-            // Начальная позиция
-            const startX = Math.random() * 10;
-            const startY = Math.random() * 10;
-            pixel.style.transform = `translate(${startX}px, ${startY}px)`;
+        
+        // Движение игрока
+        function movePlayer() {
+            if (!gameActive) return;
             
-            // Анимация
-            setInterval(() => {
-                const moveX = (Math.random() - 0.5) * 20;
-                const moveY = (Math.random() - 0.5) * 20;
-                pixel.style.transform = `translate(${moveX}px, ${moveY}px)`;
-                pixel.style.transition = 'transform 3s ease-in-out';
-            }, 3000);
-        });
-
-        // Эффект "рукописного" появления текста
-        document.addEventListener('DOMContentLoaded', () => {
-            const texts = document.querySelectorAll('.section-text');
-            texts.forEach((text, index) => {
-                setTimeout(() => {
-                    text.style.opacity = '1';
-                    text.style.transform = 'translateY(0)';
-                }, 200 * index);
-                
-                // Начальные стили
-                text.style.opacity = '0';
-                text.style.transform = 'translateY(20px)';
-                text.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            if (keys.left && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if (keys.right && player.x + player.width < canvas.width) {
+                player.x += player.speed;
+            }
+        }
+        
+        // Проверка сбора монет
+        function checkCoins() {
+            coins.forEach((coin, index) => {
+                if (!coin.collected &&
+                    player.x + player.width > coin.x - coin.radius &&
+                    player.x < coin.x + coin.radius &&
+                    player.y + player.height > coin.y - coin.radius &&
+                    player.y < coin.y + coin.radius) {
+                    
+                    coin.collected = true;
+                    score += 10;
+                    scoreElement.textContent = `Счет: ${score}`;
+                    
+                    // Добавляем новую монету
+                    setTimeout(() => {
+                        coins.push({
+                            x: Math.random() * (canvas.width - 20),
+                            y: Math.random() * (canvas.height - 150),
+                            radius: 10,
+                            color: '#FFD700',
+                            collected: false
+                        });
+                    }, 1000);
+                }
             });
-        });
+        }
+        
+        // Конец игры
+        function gameOver() {
+            gameActive = false;
+            gameOverElement.style.display = 'block';
+        }
+        
+        // Отрисовка игры
+        function draw() {
+            // Очистка холста
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Отрисовка игрока
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // Отрисовка платформ
+            ctx.fillStyle = '#4a5568';
+            platforms.forEach(platform => {
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+            });
+            
+            // Отрисовка монет
+            coins.forEach(coin => {
+                if (!coin.collected) {
+                    ctx.beginPath();
+                    ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = coin.color;
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            });
+            
+            // Отрисовка счета
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Счет: ${score}`, 20, 30);
+        }
+        
+        // Игровой цикл
+        function gameLoop() {
+            if (gameActive) {
+                applyGravity();
+                movePlayer();
+                checkCoins();
+            }
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Запуск игры
+        gameLoop();
     </script>
 </body>
 </html>
