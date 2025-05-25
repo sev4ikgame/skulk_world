@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BotCraft — Большой платформер с лифтами</title>
+    <title>BotCraft — Улучшенный платформер</title>
     <style>
         body {
             margin: 0;
@@ -23,7 +23,7 @@
             margin: 10px 0;
             text-align: center;
             width: 100%;
-            max-width: 1000px;
+            max-width: 1200px;
         }
         
         #gameCanvas {
@@ -32,8 +32,7 @@
             display: block;
             margin: 0 auto;
             width: 100%;
-            max-width: 100%;
-            height: 500px;
+            height: 600px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         
@@ -129,26 +128,6 @@
             color: #718096;
         }
         
-        .health-bar {
-            display: flex;
-            justify-content: center;
-            margin: 5px 0;
-            gap: 3px;
-        }
-        
-        .health-point {
-            width: 15px;
-            height: 8px;
-            background: #48bb78;
-            border-radius: 2px;
-            transition: all 0.2s;
-        }
-        
-        .health-point.lost {
-            background: #e53e3e;
-            opacity: 0.5;
-        }
-        
         .mobile-controls {
             display: flex;
             justify-content: space-between;
@@ -191,13 +170,8 @@
 <body>
     <div class="game-container">
         <h1>Платформер с лифтами</h1>
-        <canvas id="gameCanvas" width="6000" height="600"></canvas>
+        <canvas id="gameCanvas" width="2400" height="600"></canvas>
         <div class="game-info">
-            <div class="health-bar" id="healthBar">
-                <div class="health-point"></div>
-                <div class="health-point"></div>
-                <div class="health-point"></div>
-            </div>
             <p id="gameScore">Счет: 0</p>
             <p class="controls-info">Управление: кнопки ниже или клавиатура</p>
         </div>
@@ -234,7 +208,6 @@
         const gameOverMenu = document.getElementById('gameOverMenu');
         const startBtn = document.getElementById('startBtn');
         const restartBtn = document.getElementById('restartBtn');
-        const healthBar = document.getElementById('healthBar');
         
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
@@ -242,6 +215,7 @@
         
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
+        // Настройки игры
         const config = {
             cameraSmoothing: 0.1,
             playerSpeed: isMobile ? 5 : 2,
@@ -250,52 +224,53 @@
             maxJumps: 1,
             deathHeight: 700,
             maxHealth: 3,
-            enemySpawnChance: 0.3,
+            enemySpawnChance: 0.4,
             coinSpawnInterval: 1000,
             invincibilityDuration: 60,
-            platformSpacing: 150,
-            maxPlatformHeightDiff: 120,
+            platformSpacing: 180,
+            maxPlatformHeightDiff: 150,
             enemySpeed: isMobile ? 0.7 : 0.3,
             liftSpeed: 1.5,
-            liftHeight: 100,
+            liftHeight: 120,
             liftEveryPlatforms: 5,
-            finalPlatformHeight: 100,
-            viewDistance: 1000,
-            maxPlatforms: 500
+            finalPlatformHeight: 120,
+            viewDistance: 1200,
+            maxPlatforms: 500,
+            cameraWidth: 1200,
+            cameraHeight: 600
         };
         
+        // Камера
         const camera = {
             x: 0,
             y: 0,
             targetX: 0,
             targetY: 0,
-            width: Math.min(1200, window.innerWidth),
-            height: Math.min(600, window.innerHeight * 0.7),
+            width: config.cameraWidth,
+            height: config.cameraHeight,
             zoom: 1,
-            minZoom: 0.7,
-            maxZoom: 1.5,
             isDragging: false,
             lastX: 0,
             lastY: 0
         };
         
+        // Масштабирование canvas
         function resizeCanvas() {
             const maxWidth = window.innerWidth * 0.95;
-            const maxHeight = window.innerHeight * 0.6;
-            const ratio = Math.min(maxWidth / 1200, maxHeight / 600);
+            const maxHeight = window.innerHeight * 0.7;
+            const ratio = Math.min(maxWidth / config.cameraWidth, maxHeight / config.cameraHeight);
             
-            canvas.style.width = (1200 * ratio) + 'px';
-            canvas.style.height = (600 * ratio) + 'px';
-            
-            camera.width = 1200 * ratio;
-            camera.height = 600 * ratio;
+            canvas.style.width = (config.cameraWidth * ratio) + 'px';
+            canvas.style.height = (config.cameraHeight * ratio) + 'px';
         }
         
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
         
+        // Игровые переменные
         let player, platforms, coins, enemies, lifts, score, gameActive, currentJumps, health, lastGeneratedX;
         
+        // Создание платформ
         function createPlatforms() {
             platforms = [];
             lifts = [];
@@ -310,6 +285,7 @@
             generateMorePlatforms(3000);
         }
         
+        // Генерация дополнительных платформ
         function generateMorePlatforms(upToX) {
             let lastX = lastGeneratedX;
             let lastY = 550;
@@ -414,7 +390,7 @@
             
             lastGeneratedX = lastX;
             
-            // Добавляем финальную платформу, если достигли конца генерации
+            // Добавляем финальную платформу
             if (upToX >= canvas.width - 500 && platforms.length < config.maxPlatforms) {
                 const finalPlatform = {
                     x: lastX + lastWidth + 50,
@@ -429,6 +405,7 @@
             }
         }
         
+        // Инициализация игры
         function initGame() {
             player = {
                 x: 100,
@@ -452,27 +429,172 @@
             currentJumps = 0;
             health = config.maxHealth;
             scoreElement.textContent = `Счет: ${score}`;
-            updateHealthBar();
             
-            camera.x = player.x - camera.width / 2 / camera.zoom;
-            camera.y = player.y - camera.height / 2 / camera.zoom;
+            camera.x = player.x - camera.width / 3;
+            camera.y = player.y - camera.height / 2;
             camera.targetX = camera.x;
             camera.targetY = camera.y;
             
             showMenu(null);
         }
         
-        function updateHealthBar() {
-            const healthPoints = healthBar.querySelectorAll('.health-point');
-            healthPoints.forEach((point, index) => {
-                if (index < health) {
-                    point.classList.remove('lost');
-                } else {
-                    point.classList.add('lost');
-                }
-            });
+        // Обновление камеры
+        function updateCamera() {
+            if (!camera.isDragging) {
+                camera.targetX = player.x - camera.width / 3;
+                camera.targetY = player.y - camera.height / 2;
+            }
+            
+            camera.x += (camera.targetX - camera.x) * config.cameraSmoothing;
+            camera.y += (camera.targetY - camera.y) * config.cameraSmoothing;
+            
+            camera.x = Math.max(0, Math.min(camera.x, canvas.width - camera.width));
+            camera.y = Math.max(0, Math.min(camera.y, canvas.height - camera.height));
         }
         
+        // Отрисовка игры
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Определяем видимую область с запасом
+            const visibleLeft = camera.x - 200;
+            const visibleRight = camera.x + camera.width + 200;
+            const visibleTop = camera.y - 100;
+            const visibleBottom = camera.y + camera.height + 100;
+            
+            // Рисуем фон
+            ctx.fillStyle = '#2d3748';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Платформы (только видимые)
+            platforms.forEach(platform => {
+                if (platform.x + platform.width > visibleLeft && platform.x < visibleRight &&
+                    platform.y + platform.height > visibleTop && platform.y < visibleBottom) {
+                    ctx.fillStyle = platform.isFinal ? '#2ecc71' : '#4a5568';
+                    ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+                    
+                    // Тень под платформой
+                    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                    ctx.fillRect(platform.x, platform.y + platform.height, platform.width, 5);
+                }
+            });
+            
+            // Лифты (только видимые)
+            lifts.forEach(lift => {
+                if (lift.x + lift.width > visibleLeft && lift.x < visibleRight &&
+                    lift.y + lift.height > visibleTop && lift.y < visibleBottom) {
+                    // Трос лифта
+                    ctx.strokeStyle = '#5b6ceb';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(lift.x + lift.width/2, lift.y);
+                    ctx.lineTo(lift.x + lift.width/2, 0);
+                    ctx.stroke();
+                    
+                    // Платформа лифта
+                    ctx.fillStyle = lift.color;
+                    ctx.fillRect(lift.x, lift.y, lift.width, lift.height);
+                    
+                    // Детали лифта
+                    ctx.fillStyle = '#6c5ce7';
+                    ctx.fillRect(lift.x + 5, lift.y, lift.width - 10, 3);
+                }
+            });
+            
+            // Монеты (только видимые)
+            ctx.fillStyle = '#FFD700';
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 5;
+            coins.forEach(coin => {
+                if (!coin.collected && 
+                    coin.x + coin.radius > visibleLeft && coin.x - coin.radius < visibleRight &&
+                    coin.y + coin.radius > visibleTop && coin.y - coin.radius < visibleBottom) {
+                    ctx.beginPath();
+                    ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Блик на монете
+                    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                    ctx.beginPath();
+                    ctx.arc(coin.x - coin.radius/3, coin.y - coin.radius/3, coin.radius/3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#FFD700';
+                }
+            });
+            ctx.shadowColor = 'transparent';
+            
+            // Враги (только видимые)
+            enemies.forEach(enemy => {
+                if (enemy.x + enemy.width > visibleLeft && enemy.x < visibleRight &&
+                    enemy.y + enemy.height > visibleTop && enemy.y < visibleBottom) {
+                    // Тело врага
+                    ctx.fillStyle = enemy.color;
+                    ctx.beginPath();
+                    ctx.roundRect(enemy.x, enemy.y, enemy.width, enemy.height, [0, 0, 5, 5]);
+                    ctx.fill();
+                    
+                    // Глаза врага
+                    ctx.fillStyle = 'white';
+                    const eyeX = enemy.speed > 0 ? enemy.x + enemy.width - 10 : enemy.x + 10;
+                    ctx.beginPath();
+                    ctx.arc(eyeX, enemy.y + enemy.height / 3, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Зрачки
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.arc(eyeX + (enemy.speed > 0 ? 2 : -2), enemy.y + enemy.height / 3, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+            
+            // Игрок
+            if (gameActive) {
+                if (!player.invincible || Math.floor(Date.now() / 100) % 2 === 0) {
+                    // Тело игрока
+                    ctx.fillStyle = player.color;
+                    ctx.beginPath();
+                    ctx.roundRect(player.x, player.y, player.width, player.height, [5, 5, 0, 0]);
+                    ctx.fill();
+                    
+                    // Глаза игрока
+                    const eyeOffset = keys.left ? -2 : (keys.right ? 2 : 0);
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath();
+                    ctx.arc(player.x + player.width/2 + eyeOffset, player.y + player.height/3, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Зрачки
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.arc(player.x + player.width/2 + eyeOffset + (eyeOffset/2), player.y + player.height/3, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Тень игрока
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.beginPath();
+                ctx.ellipse(player.x + player.width/2, player.y + player.height + 5, 
+                           player.width/2, player.width/6, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Интерфейс
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(10, 10, 120, 40);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Счет: ${score}`, 20, 35);
+            
+            // Индикатор здоровья
+            for (let i = 0; i < config.maxHealth; i++) {
+                ctx.fillStyle = i < health ? '#e74c3c' : 'rgba(231, 76, 60, 0.3)';
+                ctx.fillRect(20 + i * 25, 45, 20, 10);
+            }
+        }
+        
+        // Остальные функции игры (без изменений)
         function showMenu(menu) {
             document.querySelectorAll('.game-menu').forEach(m => {
                 m.classList.remove('active');
@@ -480,21 +602,203 @@
             if (menu) menu.classList.add('active');
         }
         
-        startBtn.addEventListener('click', () => {
-            showMenu(null);
-            initGame();
-        });
+        function updateLifts() {
+            lifts.forEach(lift => {
+                if (player.x + player.width > lift.x &&
+                    player.x < lift.x + lift.width &&
+                    player.y + player.height >= lift.y &&
+                    player.y + player.height <= lift.y + lift.height / 2 &&
+                    player.velocityY >= 0) {
+                    
+                    if (!lift.active) {
+                        lift.active = true;
+                        lift.movingUp = true;
+                    }
+                    
+                    player.onLift = lift;
+                    player.y = lift.y - player.height;
+                    player.velocityY = 0;
+                    player.isJumping = false;
+                    currentJumps = 0;
+                }
+                
+                if (lift.active) {
+                    if (lift.movingUp) {
+                        lift.y -= lift.speed;
+                        if (lift.y <= lift.targetY) {
+                            lift.y = lift.targetY;
+                            lift.movingUp = false;
+                            lift.active = false;
+                            
+                            if (player.onLift === lift) {
+                                player.onLift = null;
+                            }
+                        }
+                    } else {
+                        lift.y += lift.speed;
+                        if (lift.y >= lift.originalY) {
+                            lift.y = lift.originalY;
+                            lift.active = false;
+                            
+                            if (player.onLift === lift) {
+                                player.onLift = null;
+                            }
+                        }
+                    }
+                }
+            });
+            
+            if (player.onLift) {
+                const lift = player.onLift;
+                if (player.x + player.width < lift.x || 
+                    player.x > lift.x + lift.width ||
+                    player.y + player.height < lift.y) {
+                    player.onLift = null;
+                }
+            }
+        }
         
-        restartBtn.addEventListener('click', () => {
-            showMenu(null);
-            initGame();
-        });
+        function applyGravity() {
+            if (player.onLift) return;
+            
+            player.velocityY += config.gravity;
+            player.y += player.velocityY;
+            
+            let onGround = false;
+            platforms.forEach(platform => {
+                if (player.x + player.width > platform.x &&
+                    player.x < platform.x + platform.width &&
+                    player.y + player.height >= platform.y &&
+                    player.y + player.height <= platform.y + platform.height / 2 &&
+                    player.velocityY > 0) {
+                    
+                    player.y = platform.y - player.height;
+                    player.velocityY = 0;
+                    player.isJumping = false;
+                    onGround = true;
+                    currentJumps = 0;
+                    
+                    if (platform.isFinal) {
+                        player.y -= config.finalPlatformHeight;
+                    }
+                }
+            });
+            
+            if (player.y > config.deathHeight) {
+                gameOver();
+                return;
+            }
+            
+            if (!onGround && player.y + player.height < canvas.height) {
+                player.isJumping = true;
+            } else if (!onGround && player.y + player.height >= canvas.height) {
+                player.y = canvas.height - player.height;
+                player.velocityY = 0;
+                player.isJumping = false;
+                currentJumps = 0;
+            }
+        }
+        
+        function movePlayer() {
+            if (!gameActive) return;
+            
+            if (keys.left && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if (keys.right && player.x + player.width < canvas.width) {
+                player.x += player.speed;
+                
+                if (player.x > lastGeneratedX - config.viewDistance) {
+                    generateMorePlatforms(lastGeneratedX + config.viewDistance * 2);
+                }
+            }
+        }
+        
+        function moveEnemies() {
+            enemies.forEach(enemy => {
+                enemy.x += enemy.speed;
+                
+                if (enemy.x < enemy.platform.x) {
+                    enemy.x = enemy.platform.x;
+                    enemy.speed *= -1;
+                } else if (enemy.x + enemy.width > enemy.platform.x + enemy.platform.width) {
+                    enemy.x = enemy.platform.x + enemy.platform.width - enemy.width;
+                    enemy.speed *= -1;
+                }
+            });
+        }
+        
+        function checkEnemyCollisions() {
+            if (player.invincible || !gameActive) return;
+            
+            for (const enemy of enemies) {
+                if (player.x + player.width > enemy.x &&
+                    player.x < enemy.x + enemy.width &&
+                    player.y + player.height > enemy.y &&
+                    player.y < enemy.y + enemy.height) {
+                    
+                    takeDamage(enemy.damage);
+                    break;
+                }
+            }
+        }
+        
+        function takeDamage(amount) {
+            health -= amount;
+            
+            player.invincible = true;
+            player.blinkTimer = config.invincibilityDuration;
+            player.velocityY = -player.jumpForce * 0.6;
+            player.isJumping = true;
+            currentJumps = 1;
+            
+            if (health <= 0) {
+                gameOver();
+            }
+        }
+        
+        function checkCoins() {
+            for (let i = coins.length - 1; i >= 0; i--) {
+                const coin = coins[i];
+                if (!coin.collected &&
+                    player.x + player.width > coin.x - coin.radius &&
+                    player.x < coin.x + coin.radius &&
+                    player.y + player.height > coin.y - coin.radius &&
+                    player.y < coin.y + coin.radius) {
+                    
+                    coin.collected = true;
+                    score += 10;
+                    scoreElement.textContent = `Счет: ${score}`;
+                    coins.splice(i, 1);
+                    
+                    setTimeout(() => {
+                        const platform = platforms[Math.floor(Math.random() * platforms.length)];
+                        coins.push({
+                            x: platform.x + Math.random() * (platform.width - 20),
+                            y: platform.y - 30,
+                            radius: 10,
+                            color: '#FFD700',
+                            collected: false
+                        });
+                    }, config.coinSpawnInterval);
+                }
+            }
+        }
+        
+        function gameOver() {
+            if (!gameActive) return;
+            
+            gameActive = false;
+            finalScoreElement.textContent = score;
+            showMenu(gameOverMenu);
+        }
         
         const keys = {
             left: false,
             right: false
         };
         
+        // Управление
         window.addEventListener('keydown', (e) => {
             if (!gameActive) return;
             
@@ -555,306 +859,17 @@
             }
         });
         
-        function updateLifts() {
-            lifts.forEach(lift => {
-                if (player.x + player.width > lift.x &&
-                    player.x < lift.x + lift.width &&
-                    player.y + player.height >= lift.y &&
-                    player.y + player.height <= lift.y + lift.height / 2 &&
-                    player.velocityY >= 0) {
-                    
-                    if (!lift.active) {
-                        lift.active = true;
-                        lift.movingUp = true;
-                    }
-                    
-                    player.onLift = lift;
-                    player.y = lift.y - player.height;
-                    player.velocityY = 0;
-                    player.isJumping = false;
-                    currentJumps = 0;
-                }
-                
-                if (lift.active) {
-                    if (lift.movingUp) {
-                        lift.y -= lift.speed;
-                        if (lift.y <= lift.targetY) {
-                            lift.y = lift.targetY;
-                            lift.movingUp = false;
-                            lift.active = false;
-                            
-                            if (player.onLift === lift) {
-                                player.onLift = null;
-                            }
-                        }
-                    } else {
-                        lift.y += lift.speed;
-                        if (lift.y >= lift.originalY) {
-                            lift.y = lift.originalY;
-                            lift.active = false;
-                            
-                            if (player.onLift === lift) {
-                                player.onLift = null;
-                            }
-                        }
-                    }
-                }
-            });
-            
-            if (player.onLift) {
-                const lift = player.onLift;
-                if (player.x + player.width < lift.x || 
-                    player.x > lift.x + lift.width ||
-                    player.y + player.height < lift.y) {
-                    player.onLift = null;
-                }
-            }
-        }
+        startBtn.addEventListener('click', () => {
+            showMenu(null);
+            initGame();
+        });
         
-        function updateCamera() {
-            if (!camera.isDragging) {
-                camera.targetX = player.x - camera.width / 2 / camera.zoom;
-                camera.targetY = player.y - camera.height / 2 / camera.zoom;
-            }
-            
-            camera.x += (camera.targetX - camera.x) * config.cameraSmoothing;
-            camera.y += (camera.targetY - camera.y) * config.cameraSmoothing;
-            
-            camera.x = Math.max(0, Math.min(camera.x, canvas.width - camera.width / camera.zoom));
-            camera.y = Math.max(0, Math.min(camera.y, canvas.height - camera.height / camera.zoom));
-        }
+        restartBtn.addEventListener('click', () => {
+            showMenu(null);
+            initGame();
+        });
         
-        function applyGravity() {
-            if (player.onLift) return;
-            
-            player.velocityY += config.gravity;
-            player.y += player.velocityY;
-            
-            let onGround = false;
-            platforms.forEach(platform => {
-                if (player.x + player.width > platform.x &&
-                    player.x < platform.x + platform.width &&
-                    player.y + player.height >= platform.y &&
-                    player.y + player.height <= platform.y + platform.height / 2 &&
-                    player.velocityY > 0) {
-                    
-                    player.y = platform.y - player.height;
-                    player.velocityY = 0;
-                    player.isJumping = false;
-                    onGround = true;
-                    currentJumps = 0;
-                    
-                    // Если это финальная платформа, поднимаем игрока
-                    if (platform.isFinal) {
-                        player.y -= config.finalPlatformHeight;
-                    }
-                }
-            });
-            
-            if (player.y > config.deathHeight) {
-                gameOver();
-                return;
-            }
-            
-            if (!onGround && player.y + player.height < canvas.height) {
-                player.isJumping = true;
-            } else if (!onGround && player.y + player.height >= canvas.height) {
-                player.y = canvas.height - player.height;
-                player.velocityY = 0;
-                player.isJumping = false;
-                currentJumps = 0;
-            }
-        }
-        
-        function movePlayer() {
-            if (!gameActive) return;
-            
-            if (keys.left && player.x > 0) {
-                player.x -= player.speed;
-            }
-            if (keys.right && player.x + player.width < canvas.width) {
-                player.x += player.speed;
-                
-                // Генерируем новые платформы по мере продвижения игрока
-                if (player.x > lastGeneratedX - config.viewDistance) {
-                    generateMorePlatforms(lastGeneratedX + config.viewDistance * 2);
-                }
-            }
-        }
-        
-        function moveEnemies() {
-            enemies.forEach(enemy => {
-                enemy.x += enemy.speed;
-                
-                if (enemy.x < enemy.platform.x) {
-                    enemy.x = enemy.platform.x;
-                    enemy.speed *= -1;
-                } else if (enemy.x + enemy.width > enemy.platform.x + enemy.platform.width) {
-                    enemy.x = enemy.platform.x + enemy.platform.width - enemy.width;
-                    enemy.speed *= -1;
-                }
-            });
-        }
-        
-        function checkEnemyCollisions() {
-            if (player.invincible || !gameActive) return;
-            
-            for (const enemy of enemies) {
-                if (player.x + player.width > enemy.x &&
-                    player.x < enemy.x + enemy.width &&
-                    player.y + player.height > enemy.y &&
-                    player.y < enemy.y + enemy.height) {
-                    
-                    takeDamage(enemy.damage);
-                    break;
-                }
-            }
-        }
-        
-        function takeDamage(amount) {
-            health -= amount;
-            updateHealthBar();
-            
-            player.invincible = true;
-            player.blinkTimer = config.invincibilityDuration;
-            player.velocityY = -player.jumpForce * 0.6;
-            player.isJumping = true;
-            currentJumps = 1;
-            
-            if (health <= 0) {
-                gameOver();
-            }
-        }
-        
-        function updateInvincibility() {
-            if (player.invincible) {
-                player.blinkTimer--;
-                if (player.blinkTimer <= 0) {
-                    player.invincible = false;
-                }
-            }
-        }
-        
-        function checkCoins() {
-            for (let i = coins.length - 1; i >= 0; i--) {
-                const coin = coins[i];
-                if (!coin.collected &&
-                    player.x + player.width > coin.x - coin.radius &&
-                    player.x < coin.x + coin.radius &&
-                    player.y + player.height > coin.y - coin.radius &&
-                    player.y < coin.y + coin.radius) {
-                    
-                    coin.collected = true;
-                    score += 10;
-                    scoreElement.textContent = `Счет: ${score}`;
-                    coins.splice(i, 1);
-                    
-                    setTimeout(() => {
-                        const platform = platforms[Math.floor(Math.random() * platforms.length)];
-                        coins.push({
-                            x: platform.x + Math.random() * (platform.width - 20),
-                            y: platform.y - 30,
-                            radius: 10,
-                            color: '#FFD700',
-                            collected: false
-                        });
-                    }, config.coinSpawnInterval);
-                }
-            }
-        }
-        
-        function gameOver() {
-            if (!gameActive) return;
-            
-            gameActive = false;
-            finalScoreElement.textContent = score;
-            showMenu(gameOverMenu);
-        }
-        
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.save();
-            ctx.scale(camera.zoom, camera.zoom);
-            ctx.translate(-camera.x, -camera.y);
-            
-            // Определяем видимую область
-            const visibleLeft = camera.x;
-            const visibleRight = camera.x + camera.width / camera.zoom;
-            const visibleTop = camera.y;
-            const visibleBottom = camera.y + camera.height / camera.zoom;
-            
-            // Платформы (только видимые)
-            platforms.forEach(platform => {
-                if (platform.x + platform.width > visibleLeft && platform.x < visibleRight &&
-                    platform.y + platform.height > visibleTop && platform.y < visibleBottom) {
-                    ctx.fillStyle = platform.isFinal ? '#2ecc71' : '#4a5568';
-                    ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
-                }
-            });
-            
-            // Лифты (только видимые)
-            lifts.forEach(lift => {
-                if (lift.x + lift.width > visibleLeft && lift.x < visibleRight &&
-                    lift.y + lift.height > visibleTop && lift.y < visibleBottom) {
-                    ctx.fillStyle = lift.color;
-                    ctx.fillRect(lift.x, lift.y, lift.width, lift.height);
-                    
-                    ctx.strokeStyle = '#5b6ceb';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(lift.x + lift.width/2, lift.y);
-                    ctx.lineTo(lift.x + lift.width/2, 0);
-                    ctx.stroke();
-                }
-            });
-            
-            // Монеты (только видимые)
-            coins.forEach(coin => {
-                if (!coin.collected && 
-                    coin.x + coin.radius > visibleLeft && coin.x - coin.radius < visibleRight &&
-                    coin.y + coin.radius > visibleTop && coin.y - coin.radius < visibleBottom) {
-                    ctx.fillStyle = coin.color;
-                    ctx.beginPath();
-                    ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.closePath();
-                }
-            });
-            
-            // Враги (только видимые)
-            enemies.forEach(enemy => {
-                if (enemy.x + enemy.width > visibleLeft && enemy.x < visibleRight &&
-                    enemy.y + enemy.height > visibleTop && enemy.y < visibleBottom) {
-                    ctx.fillStyle = enemy.color;
-                    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-                    
-                    ctx.fillStyle = 'white';
-                    ctx.beginPath();
-                    ctx.arc(
-                        enemy.speed > 0 ? enemy.x + enemy.width - 10 : enemy.x + 10, 
-                        enemy.y + enemy.height / 3, 
-                        3, 0, Math.PI * 2
-                    );
-                    ctx.fill();
-                    ctx.closePath();
-                }
-            });
-            
-            // Игрок (если виден)
-            if (gameActive && (!player.invincible || Math.floor(Date.now() / 100) % 2 === 0)) {
-                ctx.fillStyle = player.color;
-                ctx.fillRect(player.x, player.y, player.width, player.height);
-            }
-            
-            ctx.restore();
-            
-            // Счет
-            ctx.fillStyle = 'white';
-            ctx.font = '20px Arial';
-            ctx.fillText(`Счет: ${score}`, 20, 30);
-        }
-        
+        // Игровой цикл
         function gameLoop() {
             if (gameActive) {
                 updateLifts();
@@ -863,13 +878,20 @@
                 movePlayer();
                 moveEnemies();
                 checkEnemyCollisions();
-                updateInvincibility();
                 checkCoins();
+                
+                if (player.invincible) {
+                    player.blinkTimer--;
+                    if (player.blinkTimer <= 0) {
+                        player.invincible = false;
+                    }
+                }
             }
             draw();
             requestAnimationFrame(gameLoop);
         }
         
+        // Запуск игры
         initGame();
         gameLoop();
     </script>
