@@ -7,11 +7,13 @@
             <!-- Предыдущее содержимое футера -->
             
             <div class="game-container" style="margin-top: 50px; text-align: center;">
-                <h3 style="color: white; margin-bottom: 20px;">Мини-платформер: Собери монеты!</h3>
-                <canvas id="gameCanvas" width="800" height="400" 
-                        style="background: #2d3748; border-radius: 8px; max-width: 100%;"></canvas>
+                <h3 style="color: white; margin-bottom: 20px;">Мини-платформер: Собери монеты и избегай врагов!</h3>
+                <div style="position: relative; overflow: hidden; border-radius: 8px; max-width: 100%;">
+                    <canvas id="gameCanvas" width="1600" height="800" 
+                            style="background: #2d3748; display: block;"></canvas>
+                </div>
                 <div style="margin-top: 15px; color: #a0aec0;">
-                    <p>Управление: ← → для движения, Пробел для прыжка</p>
+                    <p>Управление: ← → для движения, Пробел для прыжка | ЛКМ + движение мыши - двигать камеру | Колёсико мыши - масштаб</p>
                     <p id="gameScore" style="font-weight: bold; color: white;">Счет: 0</p>
                     <p id="gameOver" style="font-weight: bold; color: #ff4757; display: none;">Игра окончена! Обновите страницу, чтобы начать заново.</p>
                 </div>
@@ -30,43 +32,117 @@
         const scoreElement = document.getElementById('gameScore');
         const gameOverElement = document.getElementById('gameOver');
         
+        // Настройки камеры
+        const camera = {
+            x: 0,
+            y: 0,
+            targetX: 0,
+            targetY: 0,
+            width: Math.min(800, window.innerWidth - 40),
+            height: Math.min(500, window.innerHeight - 200),
+            smoothing: 0.05, // Ещё более плавное движение камеры
+            zoom: 1,
+            minZoom: 0.5,
+            maxZoom: 2,
+            isDragging: false,
+            lastX: 0,
+            lastY: 0
+        };
+        
+        // Установка размеров отображения
+        canvas.style.width = camera.width + 'px';
+        canvas.style.height = camera.height + 'px';
+        
         // Размеры игрока
         const player = {
-            x: 50,
-            y: 350,
+            x: 100,
+            y: 700,
             width: 30,
             height: 30,
-            speed: 4, // Уменьшенная скорость
-            jumpForce: 10, // Уменьшенная сила прыжка
+            speed: 3,
+            jumpForce: 8,
             velocityY: 0,
             isJumping: false,
-            color: '#5b6ceb'
+            color: '#5b6ceb',
+            invincible: false,
+            blinkTimer: 0
         };
         
         // Платформы
         const platforms = [
-            { x: 0, y: 380, width: 200, height: 20 },
-            { x: 250, y: 350, width: 150, height: 20 },
-            { x: 450, y: 320, width: 150, height: 20 },
-            { x: 650, y: 290, width: 150, height: 20 },
-            { x: 300, y: 220, width: 100, height: 20 },
-            { x: 150, y: 180, width: 100, height: 20 },
-            { x: 500, y: 150, width: 100, height: 20 },
-            { x: 200, y: 100, width: 100, height: 20 },
-            { x: 600, y: 70, width: 100, height: 20 }
+            // Основные платформы снизу
+            { x: 0, y: 750, width: 200, height: 20 },
+            { x: 250, y: 700, width: 150, height: 20 },
+            { x: 450, y: 650, width: 150, height: 20 },
+            { x: 650, y: 600, width: 150, height: 20 },
+            { x: 850, y: 550, width: 150, height: 20 },
+            { x: 1050, y: 500, width: 150, height: 20 },
+            { x: 1250, y: 450, width: 150, height: 20 },
+            { x: 1450, y: 400, width: 150, height: 20 },
+            
+            // Средний уровень
+            { x: 100, y: 500, width: 100, height: 20 },
+            { x: 300, y: 450, width: 100, height: 20 },
+            { x: 500, y: 400, width: 100, height: 20 },
+            { x: 700, y: 350, width: 100, height: 20 },
+            { x: 900, y: 300, width: 100, height: 20 },
+            { x: 1100, y: 250, width: 100, height: 20 },
+            { x: 1300, y: 200, width: 100, height: 20 },
+            
+            // Верхний уровень
+            { x: 200, y: 150, width: 80, height: 20 },
+            { x: 400, y: 100, width: 80, height: 20 },
+            { x: 600, y: 50, width: 80, height: 20 },
+            { x: 800, y: 100, width: 80, height: 20 },
+            { x: 1000, y: 150, width: 80, height: 20 },
+            { x: 1200, y: 100, width: 80, height: 20 },
+            { x: 1400, y: 50, width: 80, height: 20 },
+            
+            // Специальные платформы
+            { x: 200, y: 300, width: 60, height: 20 },
+            { x: 400, y: 250, width: 60, height: 20 },
+            { x: 600, y: 200, width: 60, height: 20 },
+            { x: 800, y: 250, width: 60, height: 20 },
+            { x: 1000, y: 300, width: 60, height: 20 },
+            { x: 1200, y: 250, width: 60, height: 20 },
+            { x: 1400, y: 200, width: 60, height: 20 }
         ];
         
         // Монеты
         const coins = [];
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < 25; i++) {
             coins.push({
-                x: Math.random() * (canvas.width - 20),
-                y: Math.random() * (canvas.height - 150),
+                x: Math.random() * (canvas.width - 40),
+                y: Math.random() * (canvas.height - 200),
                 radius: 10,
                 color: '#FFD700',
                 collected: false
             });
         }
+        
+        // Противники
+        const enemies = [];
+        const enemyTypes = [
+            { color: '#ff4757', speed: 1.5, size: 25 },
+            { color: '#ff6348', speed: 2, size: 20 },
+            { color: '#ff7f50', speed: 1, size: 30 }
+        ];
+        
+        // Создаем противников на платформах
+        platforms.forEach(platform => {
+            if (Math.random() > 0.7 && platform.y < 700) { // 30% chance to spawn enemy, not on bottom platforms
+                const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+                enemies.push({
+                    x: platform.x + Math.random() * (platform.width - type.size),
+                    y: platform.y - type.size,
+                    width: type.size,
+                    height: type.size,
+                    speed: type.speed * (Math.random() > 0.5 ? 1 : -1),
+                    color: type.color,
+                    platform: platform
+                });
+            }
+        });
         
         // Игровые переменные
         let score = 0;
@@ -94,9 +170,77 @@
             if (e.key === 'ArrowRight') keys.right = false;
         });
         
+        // Управление камерой мышью
+        canvas.addEventListener('mousedown', (e) => {
+            camera.isDragging = true;
+            camera.lastX = e.clientX;
+            camera.lastY = e.clientY;
+        });
+        
+        window.addEventListener('mousemove', (e) => {
+            if (camera.isDragging) {
+                const dx = e.clientX - camera.lastX;
+                const dy = e.clientY - camera.lastY;
+                
+                camera.targetX -= dx / camera.zoom;
+                camera.targetY -= dy / camera.zoom;
+                
+                camera.lastX = e.clientX;
+                camera.lastY = e.clientY;
+            }
+        });
+        
+        window.addEventListener('mouseup', () => {
+            camera.isDragging = false;
+        });
+        
+        window.addEventListener('mouseleave', () => {
+            camera.isDragging = false;
+        });
+        
+        // Масштабирование колесиком мыши
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomAmount = 0.1;
+            const oldZoom = camera.zoom;
+            
+            if (e.deltaY < 0) {
+                camera.zoom = Math.min(camera.maxZoom, camera.zoom + zoomAmount);
+            } else {
+                camera.zoom = Math.max(camera.minZoom, camera.zoom - zoomAmount);
+            }
+            
+            // Корректируем targetX/Y чтобы масштабирование было к центру
+            const mouseX = e.clientX - canvas.getBoundingClientRect().left;
+            const mouseY = e.clientY - canvas.getBoundingClientRect().top;
+            
+            const worldX = camera.x + mouseX / (oldZoom * camera.width) * canvas.width;
+            const worldY = camera.y + mouseY / (oldZoom * camera.height) * canvas.height;
+            
+            camera.targetX = worldX - mouseX / (camera.zoom * camera.width) * canvas.width;
+            camera.targetY = worldY - mouseY / (camera.zoom * camera.height) * canvas.height;
+        });
+        
+        // Обновление камеры
+        function updateCamera() {
+            if (!camera.isDragging) {
+                // Автоследование за игроком с плавностью
+                camera.targetX = player.x - camera.width / 2 / camera.zoom;
+                camera.targetY = player.y - camera.height / 2 / camera.zoom;
+            }
+            
+            // Ещё более плавное перемещение камеры
+            camera.x += (camera.targetX - camera.x) * camera.smoothing;
+            camera.y += (camera.targetY - camera.y) * camera.smoothing;
+            
+            // Ограничение камеры в пределах уровня
+            camera.x = Math.max(0, Math.min(camera.x, canvas.width - camera.width / camera.zoom));
+            camera.y = Math.max(0, Math.min(camera.y, canvas.height - camera.height / camera.zoom));
+        }
+        
         // Физика игры
         function applyGravity() {
-            player.velocityY += 0.4; // Уменьшенная гравитация
+            player.velocityY += 0.3;
             player.y += player.velocityY;
             
             // Проверка столкновения с платформами
@@ -116,7 +260,7 @@
             });
             
             // Проверка падения за пределы экрана
-            if (player.y > canvas.height) {
+            if (player.y > canvas.height + 100) {
                 gameOver();
             }
             
@@ -141,6 +285,61 @@
             }
         }
         
+        // Движение противников
+        function moveEnemies() {
+            enemies.forEach(enemy => {
+                // Движение по платформе
+                enemy.x += enemy.speed;
+                
+                // Проверка краев платформы
+                if (enemy.x < enemy.platform.x) {
+                    enemy.x = enemy.platform.x;
+                    enemy.speed *= -1;
+                } else if (enemy.x + enemy.width > enemy.platform.x + enemy.platform.width) {
+                    enemy.x = enemy.platform.x + enemy.platform.width - enemy.width;
+                    enemy.speed *= -1;
+                }
+            });
+        }
+        
+        // Проверка столкновений с врагами
+        function checkEnemyCollisions() {
+            if (player.invincible) return;
+            
+            enemies.forEach(enemy => {
+                if (player.x + player.width > enemy.x &&
+                    player.x < enemy.x + enemy.width &&
+                    player.y + player.height > enemy.y &&
+                    player.y < enemy.y + enemy.height) {
+                    
+                    playerHit();
+                }
+            });
+        }
+        
+        // Обработка попадания по игроку
+        function playerHit() {
+            player.invincible = true;
+            player.blinkTimer = 60; // 1 секунда при 60 FPS
+            
+            // Отбрасывание игрока
+            player.velocityY = -player.jumpForce * 0.7;
+            player.isJumping = true;
+            
+            // Можно добавить систему жизней здесь
+            gameOver();
+        }
+        
+        // Анимация мигания при неуязвимости
+        function updateInvincibility() {
+            if (player.invincible) {
+                player.blinkTimer--;
+                if (player.blinkTimer <= 0) {
+                    player.invincible = false;
+                }
+            }
+        }
+        
         // Проверка сбора монет
         function checkCoins() {
             coins.forEach((coin, index) => {
@@ -157,8 +356,8 @@
                     // Добавляем новую монету
                     setTimeout(() => {
                         coins.push({
-                            x: Math.random() * (canvas.width - 20),
-                            y: Math.random() * (canvas.height - 150),
+                            x: Math.random() * (canvas.width - 40),
+                            y: Math.random() * (canvas.height - 200),
                             radius: 10,
                             color: '#FFD700',
                             collected: false
@@ -174,14 +373,17 @@
             gameOverElement.style.display = 'block';
         }
         
-        // Отрисовка игры
+        // Отрисовка игры с учетом камеры
         function draw() {
             // Очистка холста
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Отрисовка игрока
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
+            // Сохраняем состояние контекста
+            ctx.save();
+            
+            // Применяем трансформации камеры
+            ctx.scale(camera.zoom, camera.zoom);
+            ctx.translate(-camera.x, -camera.y);
             
             // Отрисовка платформ
             ctx.fillStyle = '#4a5568';
@@ -200,7 +402,34 @@
                 }
             });
             
-            // Отрисовка счета
+            // Отрисовка противников
+            enemies.forEach(enemy => {
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                
+                // Глаза для визуализации направления
+                ctx.fillStyle = 'white';
+                const eyeOffset = enemy.speed > 0 ? 5 : -5;
+                ctx.beginPath();
+                ctx.arc(
+                    enemy.speed > 0 ? enemy.x + enemy.width - 10 : enemy.x + 10, 
+                    enemy.y + enemy.height / 3, 
+                    3, 0, Math.PI * 2
+                );
+                ctx.fill();
+                ctx.closePath();
+            });
+            
+            // Отрисовка игрока (с миганием если неуязвим)
+            if (!player.invincible || Math.floor(Date.now() / 100) % 2 === 0) {
+                ctx.fillStyle = player.color;
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+            }
+            
+            // Восстанавливаем состояние контекста
+            ctx.restore();
+            
+            // Отрисовка счета (в экранных координатах)
             ctx.fillStyle = 'white';
             ctx.font = '20px Arial';
             ctx.fillText(`Счет: ${score}`, 20, 30);
@@ -209,8 +438,12 @@
         // Игровой цикл
         function gameLoop() {
             if (gameActive) {
+                updateCamera();
                 applyGravity();
                 movePlayer();
+                moveEnemies();
+                checkEnemyCollisions();
+                updateInvincibility();
                 checkCoins();
             }
             draw();
