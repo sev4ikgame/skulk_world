@@ -219,11 +219,11 @@
         
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-        // Базовые размеры игрового мира (логические единицы)
+        // Базовые размеры игрового мира
         const gameWidth = 1600;
         const gameHeight = 900;
         
-        // Установка размеров canvas с учетом пропорций
+        // Установка размеров canvas
         function resizeCanvas() {
             const container = document.querySelector('.game-container');
             const maxWidth = container.clientWidth;
@@ -246,7 +246,6 @@
         
         // Конфигурация игры
         const config = {
-            cameraSmoothing: 0.1,
             playerSpeed: 4,
             playerJumpForce: 18,
             gravity: 0.7,
@@ -272,7 +271,7 @@
             levelLength: 5000
         };
         
-        // Камера с улучшенным слежением
+        // Камера без ограничений
         const camera = {
             x: 0,
             y: 0,
@@ -280,12 +279,9 @@
             targetY: 0,
             width: gameWidth,
             height: gameHeight,
-            zoom: 1,
-            isDragging: false,
-            lookAhead: 150, // Опережение камеры
-            verticalOffset: -100, // Смещение вверх
-            smoothSpeed: 0.1, // Плавность перемещения
-            maxVerticalOffset: 200 // Макс. смещение при прыжке
+            smoothSpeed: 0.1,
+            lookAhead: 200,
+            verticalOffset: -150
         };
         
         // Игровые переменные
@@ -485,35 +481,20 @@
             if (menu) menu.classList.add('active');
         }
         
+        // ОБНОВЛЁННАЯ ФУНКЦИЯ КАМЕРЫ БЕЗ ОГРАНИЧЕНИЙ
         function updateCamera() {
-            if (!camera.isDragging) {
-                // Опережение камеры в направлении движения
-                let lookAheadX = 0;
-                if (keys.right) lookAheadX = camera.lookAhead;
-                if (keys.left) lookAheadX = -camera.lookAhead/2;
-                
-                camera.targetX = player.x - camera.width/3 + lookAheadX;
-                
-                // Вертикальное смещение с учетом прыжка
-                let verticalOffset = camera.verticalOffset;
-                if (player.isJumping) {
-                    verticalOffset = -camera.maxVerticalOffset;
-                }
-                camera.targetY = player.y + verticalOffset;
-                
-                // Ограничения камеры
-                const minCameraY = 0;
-                const maxCameraY = gameHeight - camera.height;
-                camera.targetY = Math.max(minCameraY, Math.min(camera.targetY, maxCameraY));
-                
-                const minCameraX = 0;
-                const maxCameraX = config.levelLength - camera.width;
-                camera.targetX = Math.max(minCameraX, Math.min(camera.targetX, maxCameraX));
-            }
+            // Опережение камеры в направлении движения
+            let lookAhead = 0;
+            if (keys.right) lookAhead = camera.lookAhead;
+            if (keys.left) lookAhead = -camera.lookAhead * 0.5;
             
-            // Плавное перемещение с разной скоростью по осям
+            // Плавное следование за игроком без ограничений
+            camera.targetX = player.x - gameWidth/3 + lookAhead;
+            camera.targetY = player.y + camera.verticalOffset;
+            
+            // Плавное перемещение без границ
             camera.x += (camera.targetX - camera.x) * camera.smoothSpeed;
-            camera.y += (camera.targetY - camera.y) * camera.smoothSpeed * 0.5;
+            camera.y += (camera.targetY - camera.y) * camera.smoothSpeed * 0.7;
         }
         
         function updateLifts() {
@@ -801,6 +782,7 @@
             ctx.save();
             ctx.scale(scale, scale);
             
+            // Видимая область (теперь без ограничений)
             const visibleLeft = camera.x - 200;
             const visibleRight = camera.x + camera.width + 200;
             const visibleTop = camera.y - 100;
@@ -990,7 +972,7 @@
         function gameLoop() {
             if (gameActive) {
                 updateLifts();
-                updateCamera();
+                updateCamera(); // Теперь камера без ограничений
                 applyGravity();
                 movePlayer();
                 moveEnemies();
