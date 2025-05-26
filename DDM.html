@@ -193,14 +193,25 @@
         </div>
     </div>
 
+    <div class="game-menu" id="winMenu">
+        <div class="game-menu-content">
+            <h2>Поздравляем!</h2>
+            <p>Вы достигли финиша с счетом: <span id="winScore">0</span></p>
+            <button class="game-btn" id="winRestartBtn">Играть снова</button>
+        </div>
+    </div>
+
     <script>
         // Инициализация canvas
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('gameScore');
         const finalScoreElement = document.getElementById('finalScore');
+        const winScoreElement = document.getElementById('winScore');
         const gameOverMenu = document.getElementById('gameOverMenu');
+        const winMenu = document.getElementById('winMenu');
         const restartBtn = document.getElementById('restartBtn');
+        const winRestartBtn = document.getElementById('winRestartBtn');
         
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
@@ -253,12 +264,15 @@
             enemySpeed: 0.5,
             liftSpeed: 1.5,
             liftHeight: 120,
-            liftEveryPlatforms: 5,
+            liftEveryPlatforms: 4,
             finalPlatformHeight: 120,
             viewDistance: 1200,
             maxPlatforms: 500,
             playerWidth: 40,
-            playerHeight: 60
+            playerHeight: 60,
+            floorHeight: 200, // Высота каждого этажа
+            floorCount: 4,     // Количество этажей
+            levelLength: 5000  // Длина уровня до финиша
         };
         
         // Камера (работает в логических координатах)
@@ -274,7 +288,7 @@
         };
         
         // Игровые переменные
-        let player, platforms, coins, enemies, lifts, score, gameActive, currentJumps, health, lastGeneratedX;
+        let player, platforms, coins, enemies, lifts, score, gameActive, currentJumps, health, lastGeneratedX, reachedFinish;
         
         // Создание игрового мира
         function createPlatforms() {
@@ -282,9 +296,16 @@
             lifts = [];
             coins = [];
             enemies = [];
+            reachedFinish = false;
             
             // Первая платформа
-            platforms.push({ x: 0, y: gameHeight - 100, width: 300, height: 20 });
+            platforms.push({ 
+                x: 0, 
+                y: gameHeight - 100, 
+                width: 300, 
+                height: 20,
+                floor: 0
+            });
             lastGeneratedX = 300;
             
             // Генерируем начальный набор платформ
@@ -296,19 +317,34 @@
             let lastY = gameHeight - 100;
             let lastWidth = 300;
             let platformCount = platforms.length;
-            let currentLevel = 0;
-            const maxLevel = 3;
+            let currentFloor = 0;
             
             while (lastX < upToX && platforms.length < config.maxPlatforms) {
                 platformCount++;
                 
-                // Создаем лифт каждые 5 платформ
-                if (platformCount % config.liftEveryPlatforms === 0) {
+                // Определяем, нужно ли менять этаж
+                const shouldChangeFloor = Math.random() < 0.3 && 
+                                        platformCount > 10 && 
+                                        (currentFloor > 0 || Math.random() < 0.5);
+                
+                if (shouldChangeFloor) {
+                    const direction = currentFloor === 0 ? 1 : 
+                                    (currentFloor === config.floorCount - 1 ? -1 : 
+                                    (Math.random() > 0.5 ? 1 : -1));
+                    
+                    currentFloor += direction;
+                }
+                
+                // Высота платформы в зависимости от этажа
+                const floorBaseY = gameHeight - 100 - (currentFloor * config.floorHeight);
+                
+                // Создаем лифт каждые N платформ для перехода между этажами
+                if (platformCount % config.liftEveryPlatforms === 0 && currentFloor > 0) {
                     const liftX = lastX + lastWidth + 50;
-                    const liftY = lastY - 20;
+                    const liftY = floorBaseY + config.floorHeight - 20;
                     const liftWidth = 80;
                     const liftHeight = 15;
-                    const targetY = liftY - config.liftHeight;
+                    const targetY = floorBaseY - 20;
                     
                     lifts.push({
                         x: liftX,
@@ -320,7 +356,8 @@
                         speed: config.liftSpeed,
                         movingUp: false,
                         active: false,
-                        color: '#8a5beb'
+                        color: '#8a5beb',
+                        floor: currentFloor
                     });
                     
                     // Платформа над лифтом
@@ -328,7 +365,8 @@
                         x: liftX,
                         y: targetY - 20,
                         width: liftWidth,
-                        height: 20
+                        height: 20,
+                        floor: currentFloor
                     });
                     
                     lastX = liftX;
@@ -340,22 +378,15 @@
                 
                 // Обычная платформа
                 const newX = lastX + lastWidth + config.platformSpacing;
-                const maxY = gameHeight - 100 - (currentLevel * 120);
-                const minY = 100;
-                const newY = Math.max(
-                    minY,
-                    Math.min(
-                        maxY,
-                        lastY + (Math.random() * 2 - 1) * config.maxPlatformHeightDiff
-                    )
-                );
+                const newY = floorBaseY + (Math.random() * 40 - 20); // Небольшие вариации по высоте
                 const newWidth = 120 + Math.random() * 100;
                 
                 platforms.push({
                     x: newX,
                     y: newY,
                     width: newWidth,
-                    height: 20
+                    height: 20,
+                    floor: currentFloor
                 });
                 
                 // Добавляем врагов на некоторые платформы
@@ -396,16 +427,29 @@
             lastGeneratedX = lastX;
             
             // Добавляем финальную платформу
-            if (upToX >= gameWidth * 2 && platforms.length < config.maxPlatforms) {
+            if (upToX >= config.levelLength && !reachedFinish && platforms.length < config.maxPlatforms) {
                 const finalPlatform = {
-                    x: lastX + lastWidth + 50,
-                    y: lastY - config.finalPlatformHeight,
-                    width: 150,
+                    x: config.levelLength - 100,
+                    y: gameHeight - 100 - ((config.floorCount - 1) * config.floorHeight),
+                    width: 200,
                     height: 25,
                     isFinal: true,
-                    color: '#2ecc71'
+                    color: '#2ecc71',
+                    floor: config.floorCount - 1
                 };
                 platforms.push(finalPlatform);
+                
+                // Флаг финиша
+                const flag = {
+                    x: finalPlatform.x + finalPlatform.width - 30,
+                    y: finalPlatform.y - 100,
+                    width: 5,
+                    height: 100,
+                    color: '#e74c3c'
+                };
+                platforms.push(flag); // Добавляем флаг как платформу для простоты отрисовки
+                
+                reachedFinish = true;
                 lastGeneratedX = finalPlatform.x + finalPlatform.width;
             }
         }
@@ -424,7 +468,8 @@
                 color: '#5b6ceb',
                 invincible: false,
                 blinkTimer: 0,
-                onLift: null
+                onLift: null,
+                reachedFinish: false
             };
             
             createPlatforms();
@@ -440,8 +485,9 @@
             camera.targetX = 0;
             camera.targetY = 0;
             
-            // Скрываем меню окончания игры, если оно было показано
+            // Скрываем меню
             gameOverMenu.classList.remove('active');
+            winMenu.classList.remove('active');
         }
         
         function showMenu(menu) {
@@ -469,7 +515,7 @@
             camera.y += (camera.targetY - camera.y) * config.cameraSmoothing;
             
             // Ограничиваем камеру границами уровня
-            camera.x = Math.max(0, Math.min(camera.x, gameWidth * 3 - camera.width));
+            camera.x = Math.max(0, Math.min(camera.x, config.levelLength - camera.width));
             camera.y = Math.max(0, Math.min(camera.y, gameHeight - camera.height));
         }
         
@@ -549,8 +595,10 @@
                     onGround = true;
                     currentJumps = 0;
                     
-                    if (platform.isFinal) {
-                        player.y -= config.finalPlatformHeight;
+                    // Проверка на достижение финиша
+                    if (platform.isFinal && !player.reachedFinish) {
+                        player.reachedFinish = true;
+                        winGame();
                     }
                 }
             });
@@ -665,6 +713,14 @@
             showMenu(gameOverMenu);
         }
         
+        function winGame() {
+            if (!gameActive) return;
+            
+            gameActive = false;
+            winScoreElement.textContent = score;
+            showMenu(winMenu);
+        }
+        
         const keys = {
             left: false,
             right: false
@@ -737,6 +793,10 @@
             initGame();
         });
         
+        winRestartBtn.addEventListener('click', () => {
+            initGame();
+        });
+        
         // Функция отрисовки
         function draw() {
             const scale = canvas.width / gameWidth;
@@ -758,13 +818,22 @@
             ctx.fillStyle = '#2d3748';
             ctx.fillRect(0, 0, gameWidth, gameHeight);
             
+            // Рисуем фоновые элементы для этажей
+            for (let floor = 0; floor < config.floorCount; floor++) {
+                const floorY = gameHeight - 100 - (floor * config.floorHeight);
+                ctx.fillStyle = `rgba(45, 55, 72, ${0.3 + floor * 0.1})`;
+                ctx.fillRect(0, floorY - 10, gameWidth, config.floorHeight + 20);
+            }
+            
             // Платформы (только видимые)
-            ctx.fillStyle = '#4a5568';
             platforms.forEach(platform => {
                 if (platform.x + platform.width > visibleLeft && platform.x < visibleRight &&
                     platform.y + platform.height > visibleTop && platform.y < visibleBottom) {
                     
-                    ctx.fillStyle = platform.isFinal ? '#2ecc71' : '#4a5568';
+                    // Пропускаем флаг финиша (он отрисовывается отдельно)
+                    if (platform.isFinal) return;
+                    
+                    ctx.fillStyle = platform.color || '#4a5568';
                     ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
                     
                     // Тень под платформой
@@ -827,7 +896,7 @@
                     ctx.roundRect(enemy.x, enemy.y, enemy.width, enemy.height, [0, 0, 5, 5]);
                     ctx.fill();
                     
-                    // Глаза врага
+                    // Глазы врага
                     ctx.fillStyle = 'white';
                     const eyeX = enemy.speed > 0 ? enemy.x + enemy.width - 10 : enemy.x + 10;
                     ctx.beginPath();
@@ -839,6 +908,35 @@
                     ctx.beginPath();
                     ctx.arc(eyeX + (enemy.speed > 0 ? 2 : -2), enemy.y + enemy.height / 3, 2, 0, Math.PI * 2);
                     ctx.fill();
+                }
+            });
+            
+            // Финишная платформа и флаг (если есть)
+            platforms.forEach(platform => {
+                if (platform.isFinal && 
+                    platform.x + platform.width > visibleLeft && platform.x < visibleRight &&
+                    platform.y + platform.height > visibleTop && platform.y < visibleBottom) {
+                    
+                    // Финишная платформа
+                    ctx.fillStyle = '#2ecc71';
+                    ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+                    
+                    // Флаг финиша
+                    const flag = platforms.find(p => p.x === platform.x + platform.width - 30 && p.height === 100);
+                    if (flag) {
+                        // Флагшток
+                        ctx.fillStyle = '#7f8c8d';
+                        ctx.fillRect(flag.x, flag.y, flag.width, flag.height);
+                        
+                        // Флаг
+                        ctx.fillStyle = '#e74c3c';
+                        ctx.beginPath();
+                        ctx.moveTo(flag.x, flag.y);
+                        ctx.lineTo(flag.x - 50, flag.y + flag.height / 2);
+                        ctx.lineTo(flag.x, flag.y + flag.height);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
                 }
             });
             
@@ -900,6 +998,20 @@
                 ctx.fillStyle = i < health ? '#e74c3c' : 'rgba(231, 76, 60, 0.3)';
                 ctx.fillRect(30 * scale + i * 40 * scale, 60 * scale, 30 * scale, 10 * scale);
             }
+            
+            // Прогресс прохождения уровня
+            const progressWidth = 300 * scale;
+            const progressHeight = 10 * scale;
+            const progress = Math.min(1, player.x / config.levelLength);
+            
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect((gameWidth * scale - progressWidth) / 2, 20 * scale, progressWidth, progressHeight);
+            
+            ctx.fillStyle = '#5b6ceb';
+            ctx.fillRect((gameWidth * scale - progressWidth) / 2, 20 * scale, progressWidth * progress, progressHeight);
+            
+            ctx.strokeStyle = 'white';
+            ctx.strokeRect((gameWidth * scale - progressWidth) / 2, 20 * scale, progressWidth, progressHeight);
             
             ctx.restore();
         }
