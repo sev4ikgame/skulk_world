@@ -221,7 +221,7 @@
         
         // Базовые размеры игрового мира (логические единицы)
         const gameWidth = 1600;
-        const gameHeight = 900; // Соотношение 16:9
+        const gameHeight = 900;
         
         // Установка размеров canvas с учетом пропорций
         function resizeCanvas() {
@@ -229,7 +229,6 @@
             const maxWidth = container.clientWidth;
             const maxHeight = window.innerHeight * 0.8;
             
-            // Рассчитываем размеры с сохранением пропорций 16:9
             let canvasWidth = maxWidth;
             let canvasHeight = maxWidth * 9 / 16;
             
@@ -238,16 +237,14 @@
                 canvasWidth = maxHeight * 16 / 9;
             }
             
-            // Устанавливаем фактические размеры canvas
             canvas.width = gameWidth;
             canvas.height = gameHeight;
             
-            // Устанавливаем отображаемые размеры
             canvas.style.width = `${canvasWidth}px`;
             canvas.style.height = `${canvasHeight}px`;
         }
         
-        // Конфигурация игры (в логических единицах)
+        // Конфигурация игры
         const config = {
             cameraSmoothing: 0.1,
             playerSpeed: 4,
@@ -270,12 +267,12 @@
             maxPlatforms: 500,
             playerWidth: 40,
             playerHeight: 60,
-            floorHeight: 200, // Высота каждого этажа
-            floorCount: 4,     // Количество этажей
-            levelLength: 5000  // Длина уровня до финиша
+            floorHeight: 200,
+            floorCount: 4,
+            levelLength: 5000
         };
         
-        // Камера (работает в логических координатах)
+        // Камера с улучшенным слежением
         const camera = {
             x: 0,
             y: 0,
@@ -284,7 +281,11 @@
             width: gameWidth,
             height: gameHeight,
             zoom: 1,
-            isDragging: false
+            isDragging: false,
+            lookAhead: 150, // Опережение камеры
+            verticalOffset: -100, // Смещение вверх
+            smoothSpeed: 0.1, // Плавность перемещения
+            maxVerticalOffset: 200 // Макс. смещение при прыжке
         };
         
         // Игровые переменные
@@ -298,7 +299,6 @@
             enemies = [];
             reachedFinish = false;
             
-            // Первая платформа
             platforms.push({ 
                 x: 0, 
                 y: gameHeight - 100, 
@@ -308,7 +308,6 @@
             });
             lastGeneratedX = 300;
             
-            // Генерируем начальный набор платформ
             generateMorePlatforms(gameWidth * 2);
         }
         
@@ -322,7 +321,6 @@
             while (lastX < upToX && platforms.length < config.maxPlatforms) {
                 platformCount++;
                 
-                // Определяем, нужно ли менять этаж
                 const shouldChangeFloor = Math.random() < 0.3 && 
                                         platformCount > 10 && 
                                         (currentFloor > 0 || Math.random() < 0.5);
@@ -335,10 +333,8 @@
                     currentFloor += direction;
                 }
                 
-                // Высота платформы в зависимости от этажа
                 const floorBaseY = gameHeight - 100 - (currentFloor * config.floorHeight);
                 
-                // Создаем лифт каждые N платформ для перехода между этажами
                 if (platformCount % config.liftEveryPlatforms === 0 && currentFloor > 0) {
                     const liftX = lastX + lastWidth + 50;
                     const liftY = floorBaseY + config.floorHeight - 20;
@@ -360,7 +356,6 @@
                         floor: currentFloor
                     });
                     
-                    // Платформа над лифтом
                     platforms.push({
                         x: liftX,
                         y: targetY - 20,
@@ -376,9 +371,8 @@
                     continue;
                 }
                 
-                // Обычная платформа
                 const newX = lastX + lastWidth + config.platformSpacing;
-                const newY = floorBaseY + (Math.random() * 40 - 20); // Небольшие вариации по высоте
+                const newY = floorBaseY + (Math.random() * 40 - 20);
                 const newWidth = 120 + Math.random() * 100;
                 
                 platforms.push({
@@ -389,7 +383,6 @@
                     floor: currentFloor
                 });
                 
-                // Добавляем врагов на некоторые платформы
                 if (Math.random() > (1 - config.enemySpawnChance) && newY < gameHeight - 200) {
                     const enemyTypes = [
                         { color: '#ff4757', speed: config.enemySpeed, size: 30, damage: 1 },
@@ -408,7 +401,6 @@
                     });
                 }
                 
-                // Добавляем монеты на некоторые платформы
                 if (Math.random() > 0.7) {
                     coins.push({
                         x: newX + Math.random() * (newWidth - 20),
@@ -426,7 +418,6 @@
             
             lastGeneratedX = lastX;
             
-            // Добавляем финальную платформу
             if (upToX >= config.levelLength && !reachedFinish && platforms.length < config.maxPlatforms) {
                 const finalPlatform = {
                     x: config.levelLength - 100,
@@ -439,7 +430,6 @@
                 };
                 platforms.push(finalPlatform);
                 
-                // Флаг финиша
                 const flag = {
                     x: finalPlatform.x + finalPlatform.width - 30,
                     y: finalPlatform.y - 100,
@@ -447,14 +437,13 @@
                     height: 100,
                     color: '#e74c3c'
                 };
-                platforms.push(flag); // Добавляем флаг как платформу для простоты отрисовки
+                platforms.push(flag);
                 
                 reachedFinish = true;
                 lastGeneratedX = finalPlatform.x + finalPlatform.width;
             }
         }
         
-        // Инициализация игры
         function initGame() {
             player = {
                 x: 100,
@@ -485,7 +474,6 @@
             camera.targetX = 0;
             camera.targetY = 0;
             
-            // Скрываем меню
             gameOverMenu.classList.remove('active');
             winMenu.classList.remove('active');
         }
@@ -499,24 +487,33 @@
         
         function updateCamera() {
             if (!camera.isDragging) {
-                // Камера следует за игроком с небольшим опережением
-                camera.targetX = player.x - camera.width / 3;
-                // Вертикальное положение камеры центрировано на игроке
-                camera.targetY = player.y - camera.height / 2;
+                // Опережение камеры в направлении движения
+                let lookAheadX = 0;
+                if (keys.right) lookAheadX = camera.lookAhead;
+                if (keys.left) lookAheadX = -camera.lookAhead/2;
                 
-                // Ограничиваем камеру по вертикали, чтобы не показывать пустоту
+                camera.targetX = player.x - camera.width/3 + lookAheadX;
+                
+                // Вертикальное смещение с учетом прыжка
+                let verticalOffset = camera.verticalOffset;
+                if (player.isJumping) {
+                    verticalOffset = -camera.maxVerticalOffset;
+                }
+                camera.targetY = player.y + verticalOffset;
+                
+                // Ограничения камеры
                 const minCameraY = 0;
                 const maxCameraY = gameHeight - camera.height;
                 camera.targetY = Math.max(minCameraY, Math.min(camera.targetY, maxCameraY));
+                
+                const minCameraX = 0;
+                const maxCameraX = config.levelLength - camera.width;
+                camera.targetX = Math.max(minCameraX, Math.min(camera.targetX, maxCameraX));
             }
             
-            // Плавное перемещение камеры
-            camera.x += (camera.targetX - camera.x) * config.cameraSmoothing;
-            camera.y += (camera.targetY - camera.y) * config.cameraSmoothing;
-            
-            // Ограничиваем камеру границами уровня
-            camera.x = Math.max(0, Math.min(camera.x, config.levelLength - camera.width));
-            camera.y = Math.max(0, Math.min(camera.y, gameHeight - camera.height));
+            // Плавное перемещение с разной скоростью по осям
+            camera.x += (camera.targetX - camera.x) * camera.smoothSpeed;
+            camera.y += (camera.targetY - camera.y) * camera.smoothSpeed * 0.5;
         }
         
         function updateLifts() {
@@ -595,7 +592,6 @@
                     onGround = true;
                     currentJumps = 0;
                     
-                    // Проверка на достижение финиша
                     if (platform.isFinal && !player.reachedFinish) {
                         player.reachedFinish = true;
                         winGame();
@@ -627,7 +623,6 @@
             if (keys.right) {
                 player.x += player.speed;
                 
-                // Генерируем новые платформы по мере продвижения игрока
                 if (player.x > lastGeneratedX - config.viewDistance) {
                     generateMorePlatforms(lastGeneratedX + config.viewDistance * 2);
                 }
@@ -772,7 +767,7 @@
             }
         });
         
-        // Управление мышью для десктопа
+        // Управление мышью
         leftBtn.addEventListener('mousedown', () => keys.left = true);
         leftBtn.addEventListener('mouseup', () => keys.left = false);
         leftBtn.addEventListener('mouseleave', () => keys.left = false);
@@ -801,52 +796,46 @@
         function draw() {
             const scale = canvas.width / gameWidth;
             
-            // Очищаем canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Устанавливаем масштаб для правильного отображения
             ctx.save();
             ctx.scale(scale, scale);
             
-            // Определяем видимую область в логических координатах
             const visibleLeft = camera.x - 200;
             const visibleRight = camera.x + camera.width + 200;
             const visibleTop = camera.y - 100;
             const visibleBottom = camera.y + camera.height + 100;
             
-            // Рисуем фон
+            // Фон
             ctx.fillStyle = '#2d3748';
             ctx.fillRect(0, 0, gameWidth, gameHeight);
             
-            // Рисуем фоновые элементы для этажей
+            // Фоновые элементы этажей
             for (let floor = 0; floor < config.floorCount; floor++) {
                 const floorY = gameHeight - 100 - (floor * config.floorHeight);
                 ctx.fillStyle = `rgba(45, 55, 72, ${0.3 + floor * 0.1})`;
                 ctx.fillRect(0, floorY - 10, gameWidth, config.floorHeight + 20);
             }
             
-            // Платформы (только видимые)
+            // Платформы
             platforms.forEach(platform => {
                 if (platform.x + platform.width > visibleLeft && platform.x < visibleRight &&
                     platform.y + platform.height > visibleTop && platform.y < visibleBottom) {
                     
-                    // Пропускаем флаг финиша (он отрисовывается отдельно)
                     if (platform.isFinal) return;
                     
                     ctx.fillStyle = platform.color || '#4a5568';
                     ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
                     
-                    // Тень под платформой
                     ctx.fillStyle = 'rgba(0,0,0,0.2)';
                     ctx.fillRect(platform.x, platform.y + platform.height, platform.width, 5);
                 }
             });
             
-            // Лифты (только видимые)
+            // Лифты
             lifts.forEach(lift => {
                 if (lift.x + lift.width > visibleLeft && lift.x < visibleRight &&
                     lift.y + lift.height > visibleTop && lift.y < visibleBottom) {
-                    // Трос лифта
                     ctx.strokeStyle = '#5b6ceb';
                     ctx.lineWidth = 3;
                     ctx.beginPath();
@@ -854,17 +843,15 @@
                     ctx.lineTo(lift.x + lift.width/2, 0);
                     ctx.stroke();
                     
-                    // Платформа лифта
                     ctx.fillStyle = lift.color;
                     ctx.fillRect(lift.x, lift.y, lift.width, lift.height);
                     
-                    // Детали лифта
                     ctx.fillStyle = '#6c5ce7';
                     ctx.fillRect(lift.x + 5, lift.y, lift.width - 10, 3);
                 }
             });
             
-            // Монеты (только видимые)
+            // Монеты
             ctx.fillStyle = '#FFD700';
             ctx.shadowColor = 'rgba(0,0,0,0.3)';
             ctx.shadowBlur = 5;
@@ -876,7 +863,6 @@
                     ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Блик на монете
                     ctx.fillStyle = 'rgba(255,255,255,0.7)';
                     ctx.beginPath();
                     ctx.arc(coin.x - coin.radius/3, coin.y - coin.radius/3, coin.radius/3, 0, Math.PI * 2);
@@ -886,24 +872,21 @@
             });
             ctx.shadowColor = 'transparent';
             
-            // Враги (только видимые)
+            // Враги
             enemies.forEach(enemy => {
                 if (enemy.x + enemy.width > visibleLeft && enemy.x < visibleRight &&
                     enemy.y + enemy.height > visibleTop && enemy.y < visibleBottom) {
-                    // Тело врага
                     ctx.fillStyle = enemy.color;
                     ctx.beginPath();
                     ctx.roundRect(enemy.x, enemy.y, enemy.width, enemy.height, [0, 0, 5, 5]);
                     ctx.fill();
                     
-                    // Глазы врага
                     ctx.fillStyle = 'white';
                     const eyeX = enemy.speed > 0 ? enemy.x + enemy.width - 10 : enemy.x + 10;
                     ctx.beginPath();
                     ctx.arc(eyeX, enemy.y + enemy.height / 3, 4, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Зрачки
                     ctx.fillStyle = 'black';
                     ctx.beginPath();
                     ctx.arc(eyeX + (enemy.speed > 0 ? 2 : -2), enemy.y + enemy.height / 3, 2, 0, Math.PI * 2);
@@ -911,24 +894,20 @@
                 }
             });
             
-            // Финишная платформа и флаг (если есть)
+            // Финиш
             platforms.forEach(platform => {
                 if (platform.isFinal && 
                     platform.x + platform.width > visibleLeft && platform.x < visibleRight &&
                     platform.y + platform.height > visibleTop && platform.y < visibleBottom) {
                     
-                    // Финишная платформа
                     ctx.fillStyle = '#2ecc71';
                     ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
                     
-                    // Флаг финиша
                     const flag = platforms.find(p => p.x === platform.x + platform.width - 30 && p.height === 100);
                     if (flag) {
-                        // Флагшток
                         ctx.fillStyle = '#7f8c8d';
                         ctx.fillRect(flag.x, flag.y, flag.width, flag.height);
                         
-                        // Флаг
                         ctx.fillStyle = '#e74c3c';
                         ctx.beginPath();
                         ctx.moveTo(flag.x, flag.y);
@@ -943,27 +922,23 @@
             // Игрок
             if (gameActive) {
                 if (!player.invincible || Math.floor(Date.now() / 100) % 2 === 0) {
-                    // Тело игрока
                     ctx.fillStyle = player.color;
                     ctx.beginPath();
                     ctx.roundRect(player.x, player.y, player.width, player.height, [5, 5, 0, 0]);
                     ctx.fill();
                     
-                    // Глаза игрока
                     const eyeOffset = keys.left ? -2 : (keys.right ? 2 : 0);
                     ctx.fillStyle = 'white';
                     ctx.beginPath();
                     ctx.arc(player.x + player.width/2 + eyeOffset, player.y + player.height/3, 4, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Зрачки
                     ctx.fillStyle = 'black';
                     ctx.beginPath();
                     ctx.arc(player.x + player.width/2 + eyeOffset + (eyeOffset/2), player.y + player.height/3, 2, 0, Math.PI * 2);
                     ctx.fill();
                 }
                 
-                // Тень игрока
                 ctx.fillStyle = 'rgba(0,0,0,0.2)';
                 ctx.beginPath();
                 ctx.ellipse(player.x + player.width/2, player.y + player.height + 5, 
@@ -971,10 +946,9 @@
                 ctx.fill();
             }
             
-            // Восстанавливаем контекст
             ctx.restore();
             
-            // Рисуем UI (в физических координатах)
+            // UI
             drawUI();
         }
         
@@ -982,10 +956,8 @@
             const scale = canvas.width / gameWidth;
             ctx.save();
             
-            // Масштабируем UI для правильного отображения на любых размерах экрана
             ctx.scale(1/scale, 1/scale);
             
-            // Рисуем интерфейс
             ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.fillRect(20 * scale, 20 * scale, 200 * scale, 60 * scale);
             
@@ -993,13 +965,11 @@
             ctx.font = `${24 * scale}px Arial`;
             ctx.fillText(`Счет: ${score}`, 30 * scale, 50 * scale);
             
-            // Индикатор здоровья
             for (let i = 0; i < config.maxHealth; i++) {
                 ctx.fillStyle = i < health ? '#e74c3c' : 'rgba(231, 76, 60, 0.3)';
                 ctx.fillRect(30 * scale + i * 40 * scale, 60 * scale, 30 * scale, 10 * scale);
             }
             
-            // Прогресс прохождения уровня
             const progressWidth = 300 * scale;
             const progressHeight = 10 * scale;
             const progress = Math.min(1, player.x / config.levelLength);
@@ -1038,7 +1008,7 @@
             requestAnimationFrame(gameLoop);
         }
         
-        // Инициализация размеров и запуск игры
+        // Запуск игры
         window.addEventListener('load', () => {
             resizeCanvas();
             initGame();
