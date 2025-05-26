@@ -244,6 +244,17 @@
             canvas.style.height = `${canvasHeight}px`;
         }
         
+        // Конфигурация камеры (ДОБАВЛЕНО)
+        const camera = {
+            x: 0,
+            y: 0,
+            width: gameWidth,
+            height: gameHeight,
+            followSpeed: 0.15,
+            offsetX: gameWidth / 3,
+            offsetY: gameHeight / 2
+        };
+
         // Конфигурация игры
         const config = {
             playerSpeed: 4,
@@ -269,19 +280,6 @@
             floorHeight: 200,
             floorCount: 4,
             levelLength: 5000
-        };
-        
-        // Камера без ограничений
-        const camera = {
-            x: 0,
-            y: 0,
-            targetX: 0,
-            targetY: 0,
-            width: gameWidth,
-            height: gameHeight,
-            smoothSpeed: 0.1,
-            lookAhead: 200,
-            verticalOffset: -150
         };
         
         // Игровые переменные
@@ -467,8 +465,6 @@
             
             camera.x = 0;
             camera.y = 0;
-            camera.targetX = 0;
-            camera.targetY = 0;
             
             gameOverMenu.classList.remove('active');
             winMenu.classList.remove('active');
@@ -481,20 +477,21 @@
             if (menu) menu.classList.add('active');
         }
         
-        // ОБНОВЛЁННАЯ ФУНКЦИЯ КАМЕРЫ БЕЗ ОГРАНИЧЕНИЙ
+        // НОВАЯ ФУНКЦИЯ КАМЕРЫ (ЗАМЕНА)
         function updateCamera() {
-            // Опережение камеры в направлении движения
-            let lookAhead = 0;
-            if (keys.right) lookAhead = camera.lookAhead;
-            if (keys.left) lookAhead = -camera.lookAhead * 0.5;
+            // Мгновенное позиционирование при старте
+            if (camera.x === 0 && camera.y === 0) {
+                camera.x = player.x - camera.offsetX;
+                camera.y = player.y - camera.offsetY;
+                return;
+            }
+
+            // Плавное следование с эффектом "пружины"
+            const targetX = player.x - camera.offsetX;
+            const targetY = player.y - camera.offsetY;
             
-            // Плавное следование за игроком без ограничений
-            camera.targetX = player.x - gameWidth/3 + lookAhead;
-            camera.targetY = player.y + camera.verticalOffset;
-            
-            // Плавное перемещение без границ
-            camera.x += (camera.targetX - camera.x) * camera.smoothSpeed;
-            camera.y += (camera.targetY - camera.y) * camera.smoothSpeed * 0.7;
+            camera.x += (targetX - camera.x) * camera.followSpeed;
+            camera.y += (targetY - camera.y) * camera.followSpeed;
         }
         
         function updateLifts() {
@@ -782,11 +779,11 @@
             ctx.save();
             ctx.scale(scale, scale);
             
-            // Видимая область (теперь без ограничений)
-            const visibleLeft = camera.x - 200;
-            const visibleRight = camera.x + camera.width + 200;
-            const visibleTop = camera.y - 100;
-            const visibleBottom = camera.y + camera.height + 100;
+            // Видимая область (используем координаты камеры)
+            const visibleLeft = camera.x;
+            const visibleRight = camera.x + camera.width;
+            const visibleTop = camera.y;
+            const visibleBottom = camera.y + camera.height;
             
             // Фон
             ctx.fillStyle = '#2d3748';
@@ -968,11 +965,11 @@
             ctx.restore();
         }
         
-        // Игровой цикл
+        // Игровой цикл (ОБНОВЛЁН)
         function gameLoop() {
             if (gameActive) {
+                updateCamera(); // Теперь вызывается первым!
                 updateLifts();
-                updateCamera(); // Теперь камера без ограничений
                 applyGravity();
                 movePlayer();
                 moveEnemies();
