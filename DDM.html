@@ -3,238 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Темные Тени</title>
+    <title>Тихий Мир — Вход</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
-            overflow: hidden;
-            background-color: #000;
-            cursor: none;
-        }
-        #game {
-            position: relative;
-            width: 100vw;
+            padding: 0;
             height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0f0c29;
+            font-family: 'Montserrat', sans-serif;
         }
-        #player {
-            position: absolute;
-            width: 64px;
-            height: 64px;
-            background-image: url('https://lh3.googleusercontent.com/d/1vhnSQ7OR0xBYxVfiAL28EqNHsHL2w_A1=w400-h400');
-            background-size: contain;
-            background-repeat: no-repeat;
-            z-index: 10;
-            transition: transform 0.1s;
-            image-rendering: pixelated;
+
+        .intro-container {
+            text-align: center;
         }
-        /* Остальной CSS остаётся без изменений */
-        .enemy {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="red"/></svg>');
-            background-size: contain;
-            z-index: 5;
-        }
-        #light {
-            position: absolute;
-            width: 250px;
-            height: 250px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0) 70%);
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-        }
-        #score {
-            position: absolute;
-            top: 10px;
-            left: 10px;
+
+        .intro-title {
             color: white;
-            font-family: monospace;
-            font-size: 20px;
-            z-index: 20;
-            text-shadow: 0 0 5px black;
+            font-size: 3rem;
+            margin-bottom: 50px;
+            text-shadow: 0 0 10px rgba(0, 150, 255, 0.5);
         }
-        #health {
-            position: absolute;
-            top: 40px;
-            left: 10px;
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 300px;
+        }
+
+        .btn-newbie {
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
             color: white;
-            font-family: monospace;
-            font-size: 20px;
-            z-index: 20;
-            text-shadow: 0 0 5px black;
+        }
+
+        .btn-member {
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
 <body>
-    <!-- Весь HTML остаётся без изменений -->
-    <div id="game">
-        <div id="score">Счёт: 0</div>
-        <div id="health">Здоровье: 100%</div>
-        <div id="light"></div>
-        <div id="player"></div>
+    <div class="intro-container">
+        <h1 class="intro-title">Добро пожаловать в <br>"Тихий Мир"</h1>
+        <button class="btn btn-newbie">Я новичок</button>
+        <button class="btn btn-member">Я участник</button>
     </div>
-
-    <!-- Весь JavaScript остаётся без изменений -->
-    <script>
-        const game = document.getElementById('game');
-        const player = document.getElementById('player');
-        const light = document.getElementById('light');
-        const scoreElement = document.getElementById('score');
-        const healthElement = document.getElementById('health');
-        
-        let score = 0;
-        let health = 100;
-        let enemies = [];
-        let gameWidth = window.innerWidth;
-        let gameHeight = window.innerHeight;
-        
-        // Инициализация игрока
-        player.style.left = (gameWidth / 2 - 32) + 'px';
-        player.style.top = (gameHeight / 2 - 32) + 'px';
-        
-        // Движение игрока за мышкой
-        document.addEventListener('mousemove', (e) => {
-            const x = e.clientX - 32;
-            const y = e.clientY - 32;
-            
-            player.style.left = x + 'px';
-            player.style.top = y + 'px';
-            light.style.left = e.clientX + 'px';
-            light.style.top = e.clientY + 'px';
-            
-            // Поворот персонажа в сторону движения
-            const playerRect = player.getBoundingClientRect();
-            const playerCenterX = playerRect.left + playerRect.width/2;
-            const playerCenterY = playerRect.top + playerRect.height/2;
-            
-            const angle = Math.atan2(e.clientY - playerCenterY, e.clientX - playerCenterX) * 180 / Math.PI;
-            player.style.transform = `rotate(${angle + 90}deg)`;
-        });
-        
-        // Создание врагов
-        function spawnEnemy() {
-            const enemy = document.createElement('div');
-            enemy.className = 'enemy';
-            
-            // Спавн за пределами экрана
-            let x, y;
-            if (Math.random() < 0.5) {
-                x = Math.random() < 0.5 ? -40 : gameWidth + 40;
-                y = Math.random() * gameHeight;
-            } else {
-                y = Math.random() < 0.5 ? -40 : gameHeight + 40;
-                x = Math.random() * gameWidth;
-            }
-            
-            enemy.style.left = x + 'px';
-            enemy.style.top = y + 'px';
-            game.appendChild(enemy);
-            
-            enemies.push({
-                element: enemy,
-                x: x,
-                y: y,
-                speed: 1 + Math.random() * 2
-            });
-        }
-        
-        // Движение врагов
-        function moveEnemies() {
-            const playerRect = player.getBoundingClientRect();
-            const playerX = playerRect.left + playerRect.width / 2;
-            const playerY = playerRect.top + playerRect.height / 2;
-            
-            enemies.forEach(enemy => {
-                const enemyRect = enemy.element.getBoundingClientRect();
-                const enemyX = enemyRect.left + enemyRect.width / 2;
-                const enemyY = enemyRect.top + enemyRect.height / 2;
-                
-                // Расчет направления к игроку
-                const dx = playerX - enemyX;
-                const dy = playerY - enemyY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                // Движение к игроку
-                enemy.x += (dx / distance) * enemy.speed;
-                enemy.y += (dy / distance) * enemy.speed;
-                
-                enemy.element.style.left = enemy.x + 'px';
-                enemy.element.style.top = enemy.y + 'px';
-                
-                // Проверка столкновения
-                if (distance < 30) {
-                    takeDamage();
-                    enemy.element.remove();
-                    enemies = enemies.filter(e => e !== enemy);
-                }
-            });
-        }
-        
-        // Получение урона
-        function takeDamage() {
-            health -= 10;
-            healthElement.textContent = `Здоровье: ${health}%`;
-            
-            // Анимация получения урона
-            player.style.filter = 'brightness(2)';
-            setTimeout(() => player.style.filter = 'brightness(1)', 200);
-            
-            if (health <= 0) {
-                alert(`Игра окончена! Ваш счёт: ${score}`);
-                resetGame();
-            }
-        }
-        
-        // Убийство врагов (кликом)
-        document.addEventListener('click', (e) => {
-            enemies.forEach(enemy => {
-                const enemyRect = enemy.element.getBoundingClientRect();
-                if (
-                    e.clientX > enemyRect.left && 
-                    e.clientX < enemyRect.right &&
-                    e.clientY > enemyRect.top && 
-                    e.clientY < enemyRect.bottom
-                ) {
-                    // Анимация смерти врага
-                    enemy.element.style.transform = 'scale(1.5)';
-                    enemy.element.style.opacity = '0';
-                    
-                    setTimeout(() => {
-                        enemy.element.remove();
-                        enemies = enemies.filter(e => e !== enemy);
-                    }, 200);
-                    
-                    score += 10;
-                    scoreElement.textContent = `Счёт: ${score}`;
-                }
-            });
-        });
-        
-        // Сброс игры
-        function resetGame() {
-            enemies.forEach(enemy => enemy.element.remove());
-            enemies = [];
-            score = 0;
-            health = 100;
-            scoreElement.textContent = `Счёт: ${score}`;
-            healthElement.textContent = `Здоровье: ${health}%`;
-            player.style.left = (gameWidth / 2 - 32) + 'px';
-            player.style.top = (gameHeight / 2 - 32) + 'px';
-            player.style.transform = 'rotate(0deg)';
-            player.style.filter = 'brightness(1)';
-        }
-        
-        // Игровой цикл
-        setInterval(spawnEnemy, 1000);
-        setInterval(moveEnemies, 16);
-        
-        // Респонсив
-        window.addEventListener('resize', () => {
-            gameWidth = window.innerWidth;
-            gameHeight = window.innerHeight;
-        });
-    </script>
 </body>
 </html>
