@@ -3,65 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тихий Мир — Вход</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+    <title>Тихий Мир — Проверка участника</title>
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            background: #121212;
+            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #0f0c29;
-            font-family: 'Montserrat', sans-serif;
+            height: 100vh;
+            margin: 0;
         }
-
-        .intro-container {
+        
+        .container {
             text-align: center;
+            max-width: 500px;
+            padding: 30px;
+            background: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-
-        .intro-title {
-            color: white;
-            font-size: 3rem;
-            margin-bottom: 50px;
-            text-shadow: 0 0 10px rgba(0, 150, 255, 0.5);
+        
+        .hidden {
+            display: none;
         }
-
-        .btn {
-            display: inline-block;
-            padding: 15px 30px;
-            margin: 10px;
-            font-size: 1.2rem;
-            font-weight: 700;
+        
+        input {
+            padding: 12px;
+            margin: 10px 0;
+            width: 80%;
+            border-radius: 5px;
             border: none;
+            font-size: 16px;
+        }
+        
+        button {
+            background: linear-gradient(90deg, #0072ff, #00c6ff);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin: 10px;
             border-radius: 50px;
             cursor: pointer;
+            font-size: 16px;
             transition: all 0.3s;
-            width: 300px;
         }
-
-        .btn-newbie {
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
-            color: white;
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 150, 255, 0.4);
         }
-
-        .btn-member {
-            background: linear-gradient(90deg, #ff7e5f, #feb47b);
-            color: white;
+        
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
         }
-
-        .btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        
+        .success {
+            background-color: #2e7d32;
+        }
+        
+        .error {
+            background-color: #c62828;
         }
     </style>
 </head>
 <body>
-    <div class="intro-container">
-        <h1 class="intro-title">Добро пожаловать в <br>"Тихий Мир"</h1>
-        <button class="btn btn-newbie">Я новичок</button>
-        <button class="btn btn-member">Я участник</button>
+    <div class="container" id="mainScreen">
+        <h1>Добро пожаловать в "Тихий Мир"</h1>
+        <button id="newbieBtn">Я новичок</button>
+        <button id="memberBtn">Я участник</button>
     </div>
+    
+    <div class="container hidden" id="idCheckScreen">
+        <h2>Введите ваш ID</h2>
+        <input type="text" id="userIdInput" placeholder="Введите ваш ID">
+        <button id="checkIdBtn">Проверить</button>
+        <div id="result" class="hidden"></div>
+    </div>
+
+    <script>
+        // Шифрование ID с помощью простого XOR (базовый уровень защиты)
+        function encryptID(id) {
+            const key = "TixiyMir2023";
+            let result = "";
+            for (let i = 0; i < id.length; i++) {
+                const keyChar = key.charCodeAt(i % key.length);
+                const idChar = id.charCodeAt(i);
+                result += String.fromCharCode(idChar ^ keyChar);
+            }
+            return btoa(result);
+        }
+        
+        // Правильный ID (зашифрованный)
+        const correctEncryptedID = "FxQcFh0XHxYdFBwXHxYdFBwXHxYdFBwXHxYdFBw=";
+        
+        document.getElementById('memberBtn').addEventListener('click', function() {
+            document.getElementById('mainScreen').classList.add('hidden');
+            document.getElementById('idCheckScreen').classList.remove('hidden');
+        });
+        
+        document.getElementById('checkIdBtn').addEventListener('click', function() {
+            const userInput = document.getElementById('userIdInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            // Проверяем введенный ID
+            if (encryptID(userInput) === correctEncryptedID) {
+                resultDiv.textContent = "ID подтвержден! Доступ разрешен.";
+                resultDiv.className = "success";
+                resultDiv.classList.remove('hidden');
+                
+                // Здесь можно добавить перенаправление или другие действия
+            } else {
+                resultDiv.textContent = "Неверный ID. Попробуйте еще раз.";
+                resultDiv.className = "error";
+                resultDiv.classList.remove('hidden');
+            }
+        });
+        
+        // Возврат на главный экран (можно добавить кнопку "Назад")
+        document.getElementById('newbieBtn').addEventListener('click', function() {
+            alert("Добро пожаловать, новичок! Скоро здесь будет информация для вас.");
+        });
+    </script>
 </body>
 </html>
