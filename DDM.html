@@ -3,129 +3,290 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тихий Мир — Проверка участника</title>
+    <title>Тихий Мир - 3D фон + проверка ID</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
     <style>
+        /* Стили для 3D фона */
+        #scene-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        /* Стили для интерфейса проверки */
         body {
-            font-family: 'Arial', sans-serif;
-            background: #121212;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            color: white;
+            overflow-x: hidden;
         }
         
         .container {
-            text-align: center;
-            max-width: 500px;
+            background: rgba(30, 30, 30, 0.8);
             padding: 30px;
-            background: #1e1e1e;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.6);
+            max-width: 500px;
+            width: 90%;
+            margin: 5vh auto;
+            position: relative;
         }
         
-        .hidden {
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(0, 150, 255, 0.5);
+            text-align: center;
+        }
+        
+        .btn {
+            display: block;
+            padding: 15px;
+            margin: 15px auto;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            max-width: 300px;
+            color: white;
+        }
+        
+        .btn-newbie {
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+        }
+        
+        .btn-member {
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        #idCheckScreen {
             display: none;
         }
         
-        input {
-            padding: 12px;
-            margin: 10px 0;
-            width: 80%;
-            border-radius: 5px;
-            border: none;
-            font-size: 16px;
-        }
-        
-        button {
-            background: linear-gradient(90deg, #0072ff, #00c6ff);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            margin: 10px;
+        .id-input {
+            padding: 15px;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 300px;
             border-radius: 50px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 150, 255, 0.4);
+            border: none;
+            font-size: 1rem;
+            text-align: center;
+            display: block;
+            background: rgba(255,255,255,0.9);
         }
         
         #result {
-            margin-top: 20px;
+            margin: 20px auto;
             padding: 15px;
-            border-radius: 5px;
+            border-radius: 50px;
+            max-width: 300px;
+            font-weight: bold;
+            display: none;
+            text-align: center;
         }
         
         .success {
-            background-color: #2e7d32;
+            background: linear-gradient(90deg, #4CAF50, #2E7D32);
+            display: block !important;
+            color: white;
         }
         
         .error {
-            background-color: #c62828;
+            background: linear-gradient(90deg, #f44336, #c62828);
+            display: block !important;
+            color: white;
+        }
+        
+        .back-btn {
+            background: linear-gradient(90deg, #9e9e9e, #616161);
         }
     </style>
 </head>
 <body>
+    <!-- Контейнер для 3D сцены -->
+    <div id="scene-container"></div>
+    
+    <!-- Интерфейс проверки ID -->
     <div class="container" id="mainScreen">
         <h1>Добро пожаловать в "Тихий Мир"</h1>
-        <button id="newbieBtn">Я новичок</button>
-        <button id="memberBtn">Я участник</button>
-    </div>
-    
-    <div class="container hidden" id="idCheckScreen">
-        <h2>Введите ваш ID</h2>
-        <input type="text" id="userIdInput" placeholder="Введите ваш ID">
-        <button id="checkIdBtn">Проверить</button>
-        <div id="result" class="hidden"></div>
+        <button class="btn btn-newbie" id="newbieBtn">Я новичок</button>
+        <button class="btn btn-member" id="memberBtn">Я участник</button>
     </div>
 
+    <div class="container" id="idCheckScreen">
+        <h1>Проверка участника</h1>
+        <input type="text" class="id-input" id="userIdInput" placeholder="Введите ваш ID">
+        <button class="btn btn-member" id="checkIdBtn">Проверить ID</button>
+        <div id="result"></div>
+        <button class="btn back-btn" id="backBtn">Назад</button>
+    </div>
+
+    <!-- Three.js библиотеки -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+
     <script>
-        // Шифрование ID с помощью простого XOR (базовый уровень защиты)
-        function encryptID(id) {
-            const key = "TixiyMir2023";
-            let result = "";
-            for (let i = 0; i < id.length; i++) {
-                const keyChar = key.charCodeAt(i % key.length);
-                const idChar = id.charCodeAt(i);
-                result += String.fromCharCode(idChar ^ keyChar);
-            }
-            return btoa(result);
-        }
+        // ==================== 3D ФОН ====================
+        // 1. Инициализация Three.js сцены
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         
-        // Правильный ID (зашифрованный)
-        const correctEncryptedID = "FxQcFh0XHxYdFBwXHxYdFBwXHxYdFBwXHxYdFBw=";
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+        document.getElementById('scene-container').appendChild(renderer.domElement);
+
+        // 2. Освещение
+        const light1 = new THREE.DirectionalLight(0xffffff, 0.8);
+        light1.position.set(1, 1, 1);
+        scene.add(light1);
         
-        document.getElementById('memberBtn').addEventListener('click', function() {
-            document.getElementById('mainScreen').classList.add('hidden');
-            document.getElementById('idCheckScreen').classList.remove('hidden');
-        });
+        const light2 = new THREE.AmbientLight(0x404040);
+        scene.add(light2);
+
+        // 3. Загрузка OBJ модели
+        const objLoader = new THREE.OBJLoader();
+        let model;
         
-        document.getElementById('checkIdBtn').addEventListener('click', function() {
-            const userInput = document.getElementById('userIdInput').value;
-            const resultDiv = document.getElementById('result');
-            
-            // Проверяем введенный ID
-            if (encryptID(userInput) === correctEncryptedID) {
-                resultDiv.textContent = "ID подтвержден! Доступ разрешен.";
-                resultDiv.className = "success";
-                resultDiv.classList.remove('hidden');
+        // ЗАМЕНИТЕ НА ПУТЬ К ВАШЕМУ ФАЙЛУ .obj
+        objLoader.load(
+            'model.obj', // Ваш файл модели
+            (object) => {
+                model = object;
                 
-                // Здесь можно добавить перенаправление или другие действия
-            } else {
-                resultDiv.textContent = "Неверный ID. Попробуйте еще раз.";
-                resultDiv.className = "error";
-                resultDiv.classList.remove('hidden');
+                // Настройки модели
+                model.scale.set(0.5, 0.5, 0.5);
+                model.position.set(0, 0, 0);
+                
+                // Центрирование
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                model.position.sub(center);
+                
+                scene.add(model);
+            },
+            (xhr) => {
+                console.log((xhr.loaded / xhr.total * 100) + '% загружено');
+            },
+            (error) => {
+                console.error('Ошибка загрузки модели:', error);
             }
+        );
+
+        // 4. Настройка камеры
+        camera.position.z = 5;
+
+        // 5. Анимация
+        let time = 0;
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            time += 0.01;
+            
+            if(model) {
+                // Плавное вращение и движение
+                model.rotation.x = Math.sin(time * 0.5) * 0.2;
+                model.rotation.y += 0.005;
+                model.position.x = Math.sin(time) * 2;
+                model.position.z = Math.cos(time * 2) * 1.5;
+                model.position.y = Math.sin(time * 1.7) * 1;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        animate3D();
+
+        // 6. Адаптивность
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        // ==================== ПРОВЕРКА ID ====================
+        // Конфигурация
+        const CORRECT_ID = "8795929212908301723";
         
-        // Возврат на главный экран (можно добавить кнопку "Назад")
-        document.getElementById('newbieBtn').addEventListener('click', function() {
+        // Элементы интерфейса
+        const mainScreen = document.getElementById('mainScreen');
+        const idCheckScreen = document.getElementById('idCheckScreen');
+        const newbieBtn = document.getElementById('newbieBtn');
+        const memberBtn = document.getElementById('memberBtn');
+        const checkIdBtn = document.getElementById('checkIdBtn');
+        const backBtn = document.getElementById('backBtn');
+        const userIdInput = document.getElementById('userIdInput');
+        const resultDiv = document.getElementById('result');
+
+        // Показываем экран проверки ID
+        memberBtn.addEventListener('click', function() {
+            mainScreen.style.display = 'none';
+            idCheckScreen.style.display = 'block';
+            userIdInput.focus();
+        });
+
+        // Возврат на главный экран
+        backBtn.addEventListener('click', function() {
+            idCheckScreen.style.display = 'none';
+            mainScreen.style.display = 'block';
+            userIdInput.value = '';
+            resultDiv.style.display = 'none';
+        });
+
+        // Проверка ID
+        checkIdBtn.addEventListener('click', function() {
+            const userInput = userIdInput.value.trim();
+            
+            if (!userInput) {
+                showResult("Введите ID", "error");
+                return;
+            }
+            
+            if (userInput.length !== CORRECT_ID.length) {
+                showResult("Неверная длина ID", "error");
+                return;
+            }
+            
+            // Имитация проверки с задержкой
+            setTimeout(() => {
+                if (userInput === CORRECT_ID) {
+                    showResult("✅ ID подтверждён! Доступ разрешён.", "success");
+                    // Здесь можно добавить перенаправление
+                    // window.location.href = "member_area.html";
+                } else {
+                    showResult("❌ Неверный ID. Попробуйте ещё раз.", "error");
+                }
+            }, 500);
+        });
+
+        // Обработка кнопки "Я новичок"
+        newbieBtn.addEventListener('click', function() {
             alert("Добро пожаловать, новичок! Скоро здесь будет информация для вас.");
+        });
+
+        // Показ результата проверки
+        function showResult(message, type) {
+            resultDiv.textContent = message;
+            resultDiv.className = type;
+            resultDiv.style.display = 'block';
+        }
+
+        // Разрешаем проверку по нажатию Enter
+        userIdInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkIdBtn.click();
+            }
         });
     </script>
 </body>
