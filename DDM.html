@@ -6,139 +6,277 @@
     <title>Тихий мир</title>
     <style>
         :root {
-            --primary: #1DA1F2;
-            --primary-dark: #1991db;
-            --dark: #15202B;
-            --darker: #10171E;
-            --darkest: #0D141C;
-            --light: #FFFFFF;
-            --gray: #8899A6;
-            --dark-gray: #253341;
-            --success: #17BF63;
-            --danger: #E0245E;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --dark: #0f172a;
+            --darker: #020617;
+            --darkest: #000000;
+            --light: #f8fafc;
+            --gray: #94a3b8;
+            --dark-gray: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            src: url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         }
 
         body {
             background-color: var(--dark);
             color: var(--light);
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* Layout */
         .app {
             display: grid;
-            grid-template-columns: 250px 1fr;
+            grid-template-columns: 80px 1fr;
             min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .app.expanded {
+            grid-template-columns: 280px 1fr;
         }
 
         /* Sidebar */
         .sidebar {
             background-color: var(--darker);
-            border-right: 1px solid var(--dark-gray);
-            padding: 20px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 0;
             position: sticky;
             top: 0;
             height: 100vh;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
         }
 
         .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-icon {
-            width: 30px;
-            height: 30px;
-            background-color: var(--primary);
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 0 20px 30px;
+            position: relative;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            margin-left: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.3s ease;
+            position: absolute;
+            left: 80px;
+        }
+
+        .app.expanded .logo-text {
+            opacity: 1;
+            transform: translateX(0);
         }
 
         .nav {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 8px;
+            padding: 0 12px;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 12px 15px;
-            border-radius: 30px;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s;
-            font-weight: 600;
+            font-weight: 500;
+            font-size: 15px;
+            position: relative;
+            overflow: hidden;
+            color: var(--gray);
+        }
+
+        .app.expanded .nav-item {
+            padding: 12px 16px;
         }
 
         .nav-item:hover {
-            background-color: var(--dark-gray);
-            color: var(--primary);
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--light);
         }
 
         .nav-item.active {
-            color: var(--primary);
+            background-color: var(--primary);
+            color: white;
         }
 
         .nav-item i {
             font-size: 20px;
+            min-width: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .nav-item-text {
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.3s ease;
+        }
+
+        .app.expanded .nav-item-text {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .expand-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .app.expanded .expand-btn {
+            transform: translateX(-50%) rotate(180deg);
         }
 
         /* Main content */
         .main {
-            padding: 20px;
+            padding: 0;
+            position: relative;
         }
 
         .header {
+            position: sticky;
+            top: 0;
+            background-color: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            z-index: 40;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .page-title {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 8px;
         }
 
         .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .btn:hover {
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
             background-color: var(--primary-dark);
         }
 
         .btn-outline {
             background-color: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
+            border: 1px solid var(--gray);
+            color: var(--light);
         }
 
         .btn-outline:hover {
-            background-color: rgba(29, 161, 242, 0.1);
+            border-color: var(--light);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--dark-gray);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .content {
+            padding: 24px;
+            height: calc(100vh - 68px);
+            overflow-y: auto;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section.active {
+            display: block;
         }
 
         /* Videos section */
@@ -152,11 +290,14 @@
             background-color: var(--darkest);
             border-radius: 12px;
             overflow: hidden;
-            transition: transform 0.2s;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .video-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .video-thumbnail {
@@ -175,7 +316,7 @@
         }
 
         .video-info {
-            padding: 15px;
+            padding: 16px;
         }
 
         .video-title {
@@ -185,111 +326,164 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            font-size: 16px;
         }
 
         .video-author {
             color: var(--gray);
             font-size: 14px;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .author-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: var(--dark-gray);
+            overflow: hidden;
+        }
+
+        .author-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .video-stats {
-            display: flex;
-            gap: 15px;
             color: var(--gray);
             font-size: 14px;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .video-actions {
             display: flex;
-            gap: 15px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid var(--dark-gray);
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .action-btn {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             background: none;
             border: none;
             color: var(--gray);
             cursor: pointer;
-            transition: color 0.2s;
+            transition: all 0.2s;
+            font-size: 14px;
         }
 
         .action-btn:hover {
-            color: var(--primary);
+            color: var(--light);
         }
 
         .action-btn.liked {
             color: var(--danger);
         }
 
+        .action-btn.commented {
+            color: var(--info);
+        }
+
+        .action-btn.saved {
+            color: var(--success);
+        }
+
+        .action-btn i {
+            font-size: 18px;
+        }
+
         .comments-section {
-            margin-top: 20px;
+            margin-top: 16px;
             background-color: var(--darkest);
             border-radius: 12px;
-            padding: 15px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: none;
         }
 
         .comments-title {
             font-weight: 600;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
+            font-size: 16px;
         }
 
         .comment-form {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
         .comment-input {
             flex: 1;
             background-color: var(--dark-gray);
             border: none;
-            border-radius: 30px;
-            padding: 12px 15px;
+            border-radius: 12px;
+            padding: 12px 16px;
             color: var(--light);
             resize: none;
             outline: none;
+            font-size: 14px;
+            min-height: 48px;
+            max-height: 120px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comment-input:focus {
+            border-color: var(--primary);
         }
 
         .comment-submit {
             background-color: var(--primary);
             color: white;
             border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            border-radius: 12px;
+            width: 48px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .comment-submit:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .comment-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .comments-list {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
         }
 
         .comment {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
         }
 
         .comment-avatar {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background-color: var(--dark-gray);
             flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
         }
 
@@ -306,8 +500,8 @@
         .comment-header {
             display: flex;
             align-items: center;
-            gap: 5px;
-            margin-bottom: 5px;
+            gap: 8px;
+            margin-bottom: 6px;
         }
 
         .comment-author {
@@ -322,12 +516,13 @@
 
         .comment-text {
             font-size: 14px;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            line-height: 1.5;
         }
 
         .comment-actions {
             display: flex;
-            gap: 15px;
+            gap: 16px;
         }
 
         /* Renders section */
@@ -341,62 +536,136 @@
             background-color: var(--darkest);
             border-radius: 12px;
             overflow: hidden;
-            transition: transform 0.2s;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .render-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .render-image {
             width: 100%;
             height: 200px;
             object-fit: cover;
+            cursor: pointer;
         }
 
         .render-info {
-            padding: 15px;
+            padding: 16px;
         }
 
         .render-title {
             font-weight: 600;
             margin-bottom: 8px;
+            font-size: 16px;
         }
 
         .render-author {
             color: var(--gray);
             font-size: 14px;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .render-actions {
             display: flex;
-            gap: 15px;
+            gap: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .reactions-container {
+            position: relative;
+        }
+
+        .reactions-panel {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background-color: var(--darkest);
+            border-radius: 24px;
+            padding: 8px;
+            display: flex;
+            gap: 4px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .reactions-panel.show {
+            display: flex;
+        }
+
+        .reaction-option {
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            transform-origin: bottom;
+        }
+
+        .reaction-option:hover {
+            transform: scale(1.3);
         }
 
         /* Chat section */
         .chat-container {
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 100px);
+            height: calc(100vh - 68px);
             background-color: var(--darkest);
             border-radius: 12px;
             overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .online-count {
+            color: var(--gray);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
         }
 
         .chat-messages {
             flex: 1;
-            padding: 20px;
+            padding: 16px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
         }
 
         .message {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             max-width: 80%;
+            animation: fadeIn 0.3s ease;
         }
 
         .message.incoming {
@@ -408,9 +677,16 @@
             flex-direction: row-reverse;
         }
 
+        .message-system {
+            align-self: center;
+            color: var(--gray);
+            font-size: 13px;
+            margin: 8px 0;
+        }
+
         .message-avatar {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background-color: var(--dark-gray);
             flex-shrink: 0;
@@ -426,71 +702,113 @@
         .message-content {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 4px;
         }
 
         .message-bubble {
-            padding: 10px 15px;
+            padding: 12px 16px;
             border-radius: 18px;
             background-color: var(--dark-gray);
+            font-size: 14px;
+            line-height: 1.5;
+            word-break: break-word;
         }
 
         .message.outgoing .message-bubble {
             background-color: var(--primary);
             color: white;
-            border-bottom-right-radius: 5px;
+            border-bottom-right-radius: 4px;
         }
 
         .message.incoming .message-bubble {
-            border-bottom-left-radius: 5px;
+            border-bottom-left-radius: 4px;
         }
 
         .message-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             font-size: 12px;
             color: var(--gray);
         }
 
+        .message-username {
+            font-weight: 500;
+        }
+
+        .message-time {
+            font-size: 11px;
+        }
+
         .message-actions {
             display: flex;
-            gap: 10px;
-            margin-left: 50px;
-            margin-top: 5px;
+            gap: 8px;
+            margin-left: 48px;
+            margin-top: 4px;
+        }
+
+        .message-reaction {
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .message-reaction:hover {
+            transform: scale(1.2);
         }
 
         .chat-input-area {
             display: flex;
-            padding: 15px;
+            padding: 16px;
             background-color: var(--darker);
-            border-top: 1px solid var(--dark-gray);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
         }
 
         .chat-input {
             flex: 1;
-            padding: 12px 15px;
+            padding: 12px 16px;
             background-color: var(--dark-gray);
             border: none;
-            border-radius: 30px;
+            border-radius: 24px;
             color: var(--light);
             resize: none;
             outline: none;
+            font-size: 14px;
+            min-height: 48px;
+            max-height: 120px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary);
         }
 
         .chat-actions {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-left: 10px;
+            gap: 8px;
+            margin-left: 12px;
         }
 
         .emoji-btn, .file-btn {
             background: none;
             border: none;
-            color: var(--primary);
+            color: var(--gray);
             font-size: 20px;
             cursor: pointer;
+            transition: all 0.2s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .emoji-btn:hover, .file-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--light);
         }
 
         .send-btn {
@@ -504,6 +822,157 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .emoji-picker {
+            position: absolute;
+            bottom: 70px;
+            right: 20px;
+            background-color: var(--darkest);
+            border-radius: 12px;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .emoji-picker.show {
+            display: grid;
+        }
+
+        .emoji-option {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            text-align: center;
+            transition: all 0.2s;
+            border-radius: 8px;
+        }
+
+        .emoji-option:hover {
+            background-color: var(--dark-gray);
+            transform: scale(1.2);
+        }
+
+        /* Auth modal */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .auth-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .auth-content {
+            background-color: var(--darkest);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .auth-modal.active .auth-content {
+            transform: translateY(0);
+        }
+
+        .auth-header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .auth-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            color: var(--light);
+            font-weight: 500;
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            background-color: var(--dark-gray);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--light);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+        }
+
+        .auth-footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .auth-switch {
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .auth-switch:hover {
+            text-decoration: underline;
         }
 
         /* Profile modal */
@@ -513,14 +982,15 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.7);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
         }
 
         .profile-modal.active {
@@ -530,17 +1000,25 @@
 
         .profile-content {
             background-color: var(--darkest);
-            border-radius: 12px;
+            border-radius: 16px;
             width: 90%;
             max-width: 500px;
-            padding: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-modal.active .profile-content {
+            transform: translateY(0);
         }
 
         .profile-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .profile-title {
@@ -554,28 +1032,35 @@
             color: var(--gray);
             font-size: 24px;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--light);
         }
 
         .profile-form {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
         }
 
         .avatar-upload {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 16px;
+            margin-bottom: 16px;
         }
 
         .avatar-preview {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             background-color: var(--dark-gray);
             overflow: hidden;
             position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.1);
         }
 
         .avatar-preview img {
@@ -601,75 +1086,59 @@
             background-color: var(--dark-gray);
             color: var(--primary);
             border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
+            padding: 8px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .form-group label {
+            font-weight: 500;
             font-size: 14px;
-            color: var(--gray);
+            transition: all 0.2s;
         }
 
-        .form-group input {
-            background-color: var(--dark-gray);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 15px;
-            color: var(--light);
-            outline: none;
+        .upload-btn:hover {
+            background-color: rgba(99, 102, 241, 0.1);
         }
 
-        .save-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        /* Emoji picker */
-        .emoji-picker {
-            position: absolute;
-            bottom: 70px;
-            right: 20px;
-            background-color: var(--darkest);
-            border-radius: 12px;
-            padding: 10px;
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 5px;
-            max-height: 200px;
-            overflow-y: auto;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        .avatar-input {
             display: none;
-            z-index: 100;
         }
 
-        .emoji-picker.show {
-            display: grid;
+        /* Add content modals */
+        .add-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
         }
 
-        .emoji-option {
-            font-size: 20px;
-            cursor: pointer;
-            padding: 5px;
-            text-align: center;
+        .add-modal.active {
+            opacity: 1;
+            pointer-events: all;
         }
 
-        .emoji-option:hover {
-            background-color: var(--dark-gray);
-            border-radius: 5px;
+        .add-content {
+            background-color: var(--darkest);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .add-modal.active .add-content {
+            transform: translateY(0);
         }
 
         /* Responsive */
@@ -682,18 +1151,51 @@
                 position: fixed;
                 top: 0;
                 left: -100%;
-                width: 80%;
+                width: 280px;
                 height: 100vh;
                 z-index: 100;
-                transition: left 0.3s;
+                transition: left 0.3s ease;
             }
             
             .sidebar.active {
                 left: 0;
             }
             
-            .main {
-                padding: 15px;
+            .expand-btn {
+                display: none;
+            }
+            
+            .logo-text {
+                opacity: 1;
+                transform: translateX(0);
+                position: static;
+            }
+            
+            .nav-item-text {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: none;
+                border: none;
+                color: var(--light);
+                font-size: 16px;
+                cursor: pointer;
+                padding: 8px;
+                margin-right: 12px;
+            }
+            
+            .header {
+                padding: 12px 16px;
+            }
+            
+            .content {
+                padding: 16px;
+                height: calc(100vh - 60px);
             }
             
             .videos-grid, .renders-grid {
@@ -701,805 +1203,133 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="app">
+    <div class="app" id="app">
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
             <div class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-moon" style="color: white; font-size: 14px;"></i>
-                </div>
-                Тихий мир
+                <div class="logo-icon">ТМ</div>
+                <span class="logo-text">Тихий мир</span>
             </div>
             
             <nav class="nav">
                 <div class="nav-item active" data-section="videos">
                     <i class="fas fa-play"></i>
-                    <span>Видео</span>
+                    <span class="nav-item-text">Видео</span>
                 </div>
                 <div class="nav-item" data-section="renders">
                     <i class="fas fa-image"></i>
-                    <span>Рендеры</span>
+                    <span class="nav-item-text">Рендеры</span>
                 </div>
                 <div class="nav-item" data-section="chat">
                     <i class="fas fa-comments"></i>
-                    <span>Чат</span>
+                    <span class="nav-item-text">Чат</span>
                 </div>
                 <div class="nav-item" id="profile-btn">
                     <i class="fas fa-user"></i>
-                    <span>Профиль</span>
+                    <span class="nav-item-text">Профиль</span>
                 </div>
             </nav>
+            
+            <button class="expand-btn" id="expand-btn">
+                <i class="fas fa-chevron-left"></i>
+            </button>
         </div>
         
         <!-- Main content -->
         <div class="main">
-            <!-- Mobile menu button -->
-            <button class="btn" id="mobile-menu-btn" style="display: none; margin-bottom: 20px;">
-                <i class="fas fa-bars"></i> Меню
-            </button>
-            
-            <!-- Videos section -->
-            <section class="section active" id="videos-section">
-                <div class="header">
-                    <h1 class="page-title">Видео</h1>
-                    <button class="btn" id="add-video-btn">
-                        <i class="fas fa-plus"></i> Добавить видео
-                    </button>
-                </div>
-                
-                <div class="videos-grid" id="videos-container">
-                    <!-- Videos will be added here -->
-                </div>
-            </section>
-            
-            <!-- Renders section -->
-            <section class="section" id="renders-section">
-                <div class="header">
-                    <h1 class="page-title">Рендеры</h1>
-                    <button class="btn" id="add-render-btn">
-                        <i class="fas fa-plus"></i> Добавить рендер
-                    </button>
-                </div>
-                
-                <div class="renders-grid" id="renders-container">
-                    <!-- Renders will be added here -->
-                </div>
-            </section>
-            
-            <!-- Chat section -->
-            <section class="section" id="chat-section">
-                <div class="header">
-                    <h1 class="page-title">Чат</h1>
-                </div>
-                
-                <div class="chat-container">
-                    <div class="chat-messages" id="chat-messages">
-                        <!-- Messages will appear here -->
-                    </div>
-                    
-                    <div class="chat-input-area">
-                        <textarea class="chat-input" id="chat-input" placeholder="Написать сообщение..."></textarea>
-                        <div class="chat-actions">
-                            <button class="emoji-btn" id="emoji-btn">
-                                <i class="far fa-smile"></i>
-                            </button>
-                            <button class="send-btn" id="send-btn">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="emoji-picker" id="emoji-picker">
-                        <!-- Emojis will be added by JS -->
-                    </div>
-                </div>
-            </section>
-        </div>
-    </div>
-    
-    <!-- Profile modal -->
-    <div class="profile-modal" id="profile-modal">
-        <div class="profile-content">
-            <div class="profile-header">
-                <h2 class="profile-title">Настройки профиля</h2>
-                <button class="close-btn" id="close-profile-btn">
-                    <i class="fas fa-times"></i>
+            <!-- Header -->
+            <div class="header">
+                <button class="mobile-menu-btn" id="mobile-menu-btn" style="display: none;">
+                    <i class="fas fa-bars"></i>
                 </button>
+                
+                <h1 class="page-title" id="page-title">Видео</h1>
+                
+                <div class="user-menu" id="user-menu">
+                    <div class="auth-buttons" id="auth-buttons">
+                        <button class="btn btn-outline" id="login-btn">Войти</button>
+                        <button class="btn btn-primary" id="register-btn">Регистрация</button>
+                    </div>
+                    <div class="user-avatar" id="user-avatar" style="display: none;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
             </div>
             
-            <form class="profile-form" id="profile-form">
-                <div class="avatar-upload">
-                    <div class="avatar-preview" id="avatar-preview">
-                        <div class="avatar-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+            <!-- Content -->
+            <div class="content">
+                <!-- Videos section -->
+                <section class="section active" id="videos-section">
+                    <div class="videos-grid" id="videos-container">
+                        <!-- Videos will be added here -->
                     </div>
-                    <button type="button" class="upload-btn" id="upload-avatar-btn">
-                        <i class="fas fa-upload"></i> Загрузить аватар
-                    </button>
-                    <input type="file" id="avatar-input" accept="image/*" style="display: none;">
-                </div>
+                </section>
                 
-                <div class="form-group">
-                    <label for="username-input">Никнейм</label>
-                    <input type="text" id="username-input" placeholder="Введите ваш никнейм">
-                </div>
-                
-                <button type="submit" class="save-btn">Сохранить</button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Add video modal -->
-    <div class="profile-modal" id="video-modal">
-        <div class="profile-content">
-            <div class="profile-header">
-                <h2 class="profile-title">Добавить видео</h2>
-                <button class="close-btn" id="close-video-btn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form class="profile-form" id="video-form">
-                <div class="form-group">
-                    <label for="video-url">Ссылка на YouTube видео</label>
-                    <input type="text" id="video-url" placeholder="https://www.youtube.com/watch?v=...">
-                </div>
-                
-                <div class="form-group">
-                    <label for="video-title">Название видео</label>
-                    <input type="text" id="video-title" placeholder="Введите название видео">
-                </div>
-                
-                <div class="form-group">
-                    <label for="video-desc">Описание (необязательно)</label>
-                    <input type="text" id="video-desc" placeholder="Введите описание видео">
-                </div>
-                
-                <button type="submit" class="save-btn">Добавить видео</button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Add render modal -->
-    <div class="profile-modal" id="render-modal">
-        <div class="profile-content">
-            <div class="profile-header">
-                <h2 class="profile-title">Добавить рендер</h2>
-                <button class="close-btn" id="close-render-btn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form class="profile-form" id="render-form">
-                <div class="form-group">
-                    <label for="render-title">Название рендера</label>
-                    <input type="text" id="render-title" placeholder="Введите название рендера">
-                </div>
-                
-                <div class="form-group">
-                    <label for="render-image">Изображение</label>
-                    <button type="button" class="upload-btn" id="upload-render-btn" style="width: 100%; text-align: center;">
-                        <i class="fas fa-upload"></i> Выбрать файл
-                    </button>
-                    <input type="file" id="render-input" accept="image/*" style="display: none;">
-                    <div id="render-preview" style="margin-top: 10px; display: none;">
-                        <img id="render-preview-image" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                <!-- Renders section -->
+                <section class="section" id="renders-section">
+                    <div class="renders-grid" id="renders-container">
+                        <!-- Renders will be added here -->
                     </div>
-                </div>
+                </section>
                 
-                <button type="submit" class="save-btn">Добавить рендер</button>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        // DOM elements
-        const sidebar = document.getElementById('sidebar');
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const navItems = document.querySelectorAll('.nav-item');
-        const sections = document.querySelectorAll('.section');
-        const profileBtn = document.getElementById('profile-btn');
-        const profileModal = document.getElementById('profile-modal');
-        const closeProfileBtn = document.getElementById('close-profile-btn');
-        const uploadAvatarBtn = document.getElementById('upload-avatar-btn');
-        const avatarInput = document.getElementById('avatar-input');
-        const avatarPreview = document.getElementById('avatar-preview');
-        const profileForm = document.getElementById('profile-form');
-        const usernameInput = document.getElementById('username-input');
-        
-        // Video elements
-        const addVideoBtn = document.getElementById('add-video-btn');
-        const videoModal = document.getElementById('video-modal');
-        const closeVideoBtn = document.getElementById('close-video-btn');
-        const videoForm = document.getElementById('video-form');
-        const videosContainer = document.getElementById('videos-container');
-        
-        // Render elements
-        const addRenderBtn = document.getElementById('add-render-btn');
-        const renderModal = document.getElementById('render-modal');
-        const closeRenderBtn = document.getElementById('close-render-btn');
-        const renderForm = document.getElementById('render-form');
-        const uploadRenderBtn = document.getElementById('upload-render-btn');
-        const renderInput = document.getElementById('render-input');
-        const renderPreview = document.getElementById('render-preview');
-        const renderPreviewImage = document.getElementById('render-preview-image');
-        const rendersContainer = document.getElementById('renders-container');
-        
-        // Chat elements
-        const chatMessages = document.getElementById('chat-messages');
-        const chatInput = document.getElementById('chat-input');
-        const sendBtn = document.getElementById('send-btn');
-        const emojiBtn = document.getElementById('emoji-btn');
-        const emojiPicker = document.getElementById('emoji-picker');
-        
-        // User data
-        let user = {
-            username: 'Аноним',
-            avatar: null
-        };
-        
-        // Emojis for picker
-        const emojis = ['😀', '😂', '😍', '😎', '😢', '😡', '🤔', '😴', '👍', '❤️', '🔥', '🎉', '🤯', '👀', '💀', '👽', '🐶', '🐱', '🦄', '🐉', '🌍', '🌈', '🍕', '⚡'];
-        
-        // Initialize app
-        function init() {
-            // Check mobile view
-            checkMobile();
-            window.addEventListener('resize', checkMobile);
-            
-            // Navigation
-            navItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    // Remove active class from all items
-                    navItems.forEach(i => i.classList.remove('active'));
-                    
-                    // Add active class to clicked item
-                    item.classList.add('active');
-                    
-                    // Show corresponding section
-                    const section = item.getAttribute('data-section');
-                    sections.forEach(s => s.classList.remove('active'));
-                    document.getElementById(`${section}-section`).classList.add('active');
-                    
-                    // Close sidebar on mobile
-                    if (window.innerWidth <= 768) {
-                        sidebar.classList.remove('active');
-                    }
-                });
-            });
-            
-            // Mobile menu
-            mobileMenuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
-            });
-            
-            // Profile modal
-            profileBtn.addEventListener('click', () => {
-                profileModal.classList.add('active');
-            });
-            
-            closeProfileBtn.addEventListener('click', () => {
-                profileModal.classList.remove('active');
-            });
-            
-            // Avatar upload
-            uploadAvatarBtn.addEventListener('click', () => {
-                avatarInput.click();
-            });
-            
-            avatarInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        user.avatar = event.target.result;
-                        avatarPreview.innerHTML = `<img src="${user.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-            
-            // Profile form
-            profileForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                user.username = usernameInput.value || 'Аноним';
-                profileModal.classList.remove('active');
-            });
-            
-            // Add video
-            addVideoBtn.addEventListener('click', () => {
-                videoModal.classList.add('active');
-            });
-            
-            closeVideoBtn.addEventListener('click', () => {
-                videoModal.classList.remove('active');
-            });
-            
-            videoForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                
-                const url = document.getElementById('video-url').value;
-                const title = document.getElementById('video-title').value;
-                const desc = document.getElementById('video-desc').value;
-                
-                // Extract video ID
-                let videoId = '';
-                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                const match = url.match(regExp);
-                
-                if (match && match[2].length === 11) {
-                    videoId = match[2];
-                } else {
-                    alert('Пожалуйста, введите корректную ссылку на YouTube видео');
-                    return;
-                }
-                
-                // Create video card
-                const videoCard = document.createElement('div');
-                videoCard.className = 'video-card';
-                videoCard.innerHTML = `
-                    <div class="video-thumbnail">
-                        <iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
-                    </div>
-                    <div class="video-info">
-                        <h3 class="video-title">${title}</h3>
-                        <p class="video-author">${user.username}</p>
-                        ${desc ? `<p class="video-stats">${desc}</p>` : ''}
-                        <div class="video-actions">
-                            <button class="action-btn like-btn">
-                                <i class="far fa-thumbs-up"></i> <span>0</span>
-                            </button>
-                            <button class="action-btn comment-btn">
-                                <i class="far fa-comment"></i> <span>0</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="comments-section" style="display: none;">
-                        <h4 class="comments-title">Комментарии</h4>
-                        <form class="comment-form">
-                            <textarea class="comment-input" placeholder="Добавить комментарий..."></textarea>
-                            <button type="submit" class="comment-submit">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </form>
-                        <div class="comments-list"></div>
-                    </div>
-                `;
-                
-                // Add event listeners for new video
-                const likeBtn = videoCard.querySelector('.like-btn');
-                const commentBtn = videoCard.querySelector('.comment-btn');
-                const commentsSection = videoCard.querySelector('.comments-section');
-                const commentForm = videoCard.querySelector('.comment-form');
-                const commentsList = videoCard.querySelector('.comments-list');
-                
-                likeBtn.addEventListener('click', () => {
-                    const icon = likeBtn.querySelector('i');
-                    const count = likeBtn.querySelector('span');
-                    
-                    if (likeBtn.classList.contains('liked')) {
-                        icon.classList.replace('fas', 'far');
-                        count.textContent = parseInt(count.textContent) - 1;
-                        likeBtn.classList.remove('liked');
-                    } else {
-                        icon.classList.replace('far', 'fas');
-                        count.textContent = parseInt(count.textContent) + 1;
-                        likeBtn.classList.add('liked');
-                    }
-                });
-                
-                commentBtn.addEventListener('click', () => {
-                    commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
-                });
-                
-                commentForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const input = commentForm.querySelector('.comment-input');
-                    const text = input.value.trim();
-                    
-                    if (text) {
-                        const comment = document.createElement('div');
-                        comment.className = 'comment';
-                        comment.innerHTML = `
-                            <div class="comment-avatar">
-                                ${user.avatar ? `<img src="${user.avatar}">` : `<i class="fas fa-user"></i>`}
+                <!-- Chat section -->
+                <section class="section" id="chat-section">
+                    <div class="chat-container">
+                        <div class="chat-header">
+                            <h2 class="chat-title">Общий чат</h2>
+                            <div class="online-count">
+                                <span class="online-dot"></span>
+                                <span id="online-count">0</span> онлайн
                             </div>
-                            <div class="comment-content">
-                                <div class="comment-header">
-                                    <span class="comment-author">${user.username}</span>
-                                    <span class="comment-time">только что</span>
-                                </div>
-                                <p class="comment-text">${text}</p>
-                                <div class="comment-actions">
-                                    <button class="action-btn">
-                                        <i class="far fa-thumbs-up"></i> <span>0</span>
-                                    </button>
-                                </div>
+                        </div>
+                        
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="message message-system">
+                                Подключитесь к чату, чтобы видеть сообщения
                             </div>
-                        `;
+                        </div>
                         
-                        commentsList.appendChild(comment);
-                        input.value = '';
-                        
-                        // Update comment count
-                        const commentCount = commentBtn.querySelector('span');
-                        commentCount.textContent = parseInt(commentCount.textContent) + 1;
-                    }
-                });
-                
-                videosContainer.prepend(videoCard);
-                videoForm.reset();
-                videoModal.classList.remove('active');
-            });
-            
-            // Add render
-            addRenderBtn.addEventListener('click', () => {
-                renderModal.classList.add('active');
-            });
-            
-            closeRenderBtn.addEventListener('click', () => {
-                renderModal.classList.remove('active');
-            });
-            
-            uploadRenderBtn.addEventListener('click', () => {
-                renderInput.click();
-            });
-            
-            renderInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        renderPreview.style.display = 'block';
-                        renderPreviewImage.src = event.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-            
-            renderForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                
-                const title = document.getElementById('render-title').value;
-                const imageSrc = renderPreviewImage.src;
-                
-                if (!imageSrc || imageSrc.includes('data:image')) {
-                    // Create render card
-                    const renderCard = document.createElement('div');
-                    renderCard.className = 'render-card';
-                    renderCard.innerHTML = `
-                        <img src="${imageSrc}" class="render-image">
-                        <div class="render-info">
-                            <h3 class="render-title">${title}</h3>
-                            <p class="render-author">${user.username}</p>
-                            <div class="render-actions">
-                                <button class="action-btn like-btn">
-                                    <i class="far fa-heart"></i> <span>0</span>
+                        <div class="chat-input-area" id="chat-input-area" style="display: none;">
+                            <textarea class="chat-input" id="chat-input" placeholder="Написать сообщение..." disabled></textarea>
+                            <div class="chat-actions">
+                                <button class="emoji-btn" id="emoji-btn">
+                                    <i class="far fa-smile"></i>
+                                </button>
+                                <button class="send-btn" id="send-btn" disabled>
+                                    <i class="fas fa-paper-plane"></i>
                                 </button>
                             </div>
-                        </div>
-                    `;
-                    
-                    // Add event listener for like button
-                    const likeBtn = renderCard.querySelector('.like-btn');
-                    likeBtn.addEventListener('click', () => {
-                        const icon = likeBtn.querySelector('i');
-                        const count = likeBtn.querySelector('span');
-                        
-                        if (likeBtn.classList.contains('liked')) {
-                            icon.classList.replace('fas', 'far');
-                            count.textContent = parseInt(count.textContent) - 1;
-                            likeBtn.classList.remove('liked');
-                        } else {
-                            icon.classList.replace('far', 'fas');
-                            count.textContent = parseInt(count.textContent) + 1;
-                            likeBtn.classList.add('liked');
-                        }
-                    });
-                    
-                    rendersContainer.prepend(renderCard);
-                    renderForm.reset();
-                    renderPreview.style.display = 'none';
-                    renderModal.classList.remove('active');
-                } else {
-                    alert('Пожалуйста, загрузите изображение');
-                }
-            });
-            
-            // Chat functionality
-            emojiBtn.addEventListener('click', () => {
-                emojiPicker.classList.toggle('show');
-            });
-            
-            // Fill emoji picker
-            emojis.forEach(emoji => {
-                const option = document.createElement('div');
-                option.className = 'emoji-option';
-                option.textContent = emoji;
-                option.addEventListener('click', () => {
-                    chatInput.value += emoji;
-                    chatInput.focus();
-                    emojiPicker.classList.remove('show');
-                });
-                emojiPicker.appendChild(option);
-            });
-            
-            // Close emoji picker when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
-                    emojiPicker.classList.remove('show');
-                }
-            });
-            
-            sendBtn.addEventListener('click', sendMessage);
-            chatInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
-            
-            // Add some sample videos and renders
-            addSampleContent();
-        }
-        
-        // Send chat message
-        function sendMessage() {
-            const text = chatInput.value.trim();
-            if (!text) return;
-            
-            const message = document.createElement('div');
-            message.className = 'message outgoing';
-            message.innerHTML = `
-                <div class="message-avatar">
-                    ${user.avatar ? `<img src="${user.avatar}">` : `<i class="fas fa-user"></i>`}
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">${text}</div>
-                    <div class="message-info">
-                        <span>${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                    <div class="message-actions">
-                        <button class="action-btn">
-                            <i class="far fa-thumbs-up"></i>
-                        </button>
-                        <button class="action-btn">
-                            <i class="far fa-heart"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            chatMessages.appendChild(message);
-            chatInput.value = '';
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            // Add auto-reply after 1-3 seconds
-            setTimeout(() => {
-                const replies = [
-                    'Привет! Как дела?',
-                    'Крутое видео!',
-                    'Кто сегодня онлайн?',
-                    'Какой у тебя ник в игре?',
-                    'Глянь мой новый рендер!'
-                ];
-                const randomReply = replies[Math.floor(Math.random() * replies.length)];
-                
-                const reply = document.createElement('div');
-                reply.className = 'message incoming';
-                reply.innerHTML = `
-                    <div class="message-avatar">
-                        <i class="fas fa-user" style="color: var(--primary);"></i>
-                    </div>
-                    <div class="message-content">
-                        <div class="message-bubble">${randomReply}</div>
-                        <div class="message-info">
-                            <span>Игрок</span>
-                            <span>${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                        </div>
-                        <div class="message-actions">
-                            <button class="action-btn">
-                                <i class="far fa-thumbs-up"></i>
-                            </button>
-                            <button class="action-btn">
-                                <i class="far fa-heart"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                
-                chatMessages.appendChild(reply);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 1000 + Math.random() * 2000);
-        }
-        
-        // Check mobile view
-        function checkMobile() {
-            if (window.innerWidth <= 768) {
-                mobileMenuBtn.style.display = 'flex';
-                sidebar.classList.remove('active');
-            } else {
-                mobileMenuBtn.style.display = 'none';
-                sidebar.classList.add('active');
-            }
-        }
-        
-        // Add sample content
-        function addSampleContent() {
-            // Sample videos
-            const sampleVideos = [
-                {
-                    id: 'dQw4w9WgXcQ',
-                    title: 'Как построить дом в Майнкрафте',
-                    author: 'Строитель',
-                    desc: 'Полное руководство по строительству уютного дома'
-                },
-                {
-                    id: 'MmB9b5njVbA',
-                    title: 'Лучшие фермы ресурсов',
-                    author: 'Фермер',
-                    desc: 'Топ-5 автоматических ферм для новичков'
-                }
-            ];
-            
-            sampleVideos.forEach(video => {
-                const videoCard = document.createElement('div');
-                videoCard.className = 'video-card';
-                videoCard.innerHTML = `
-                    <div class="video-thumbnail">
-                        <iframe src="https://www.youtube.com/embed/${video.id}" frameborder="0" allowfullscreen></iframe>
-                    </div>
-                    <div class="video-info">
-                        <h3 class="video-title">${video.title}</h3>
-                        <p class="video-author">${video.author}</p>
-                        <p class="video-stats">${video.desc}</p>
-                        <div class="video-actions">
-                            <button class="action-btn like-btn">
-                                <i class="far fa-thumbs-up"></i> <span>${Math.floor(Math.random() * 50)}</span>
-                            </button>
-                            <button class="action-btn comment-btn">
-                                <i class="far fa-comment"></i> <span>${Math.floor(Math.random() * 20)}</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="comments-section" style="display: none;">
-                        <h4 class="comments-title">Комментарии</h4>
-                        <form class="comment-form">
-                            <textarea class="comment-input" placeholder="Добавить комментарий..."></textarea>
-                            <button type="submit" class="comment-submit">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </form>
-                        <div class="comments-list"></div>
-                    </div>
-                `;
-                
-                // Add event listeners
-                const likeBtn = videoCard.querySelector('.like-btn');
-                const commentBtn = videoCard.querySelector('.comment-btn');
-                const commentsSection = videoCard.querySelector('.comments-section');
-                const commentForm = videoCard.querySelector('.comment-form');
-                const commentsList = videoCard.querySelector('.comments-list');
-                
-                likeBtn.addEventListener('click', () => {
-                    const icon = likeBtn.querySelector('i');
-                    const count = likeBtn.querySelector('span');
-                    
-                    if (likeBtn.classList.contains('liked')) {
-                        icon.classList.replace('fas', 'far');
-                        count.textContent = parseInt(count.textContent) - 1;
-                        likeBtn.classList.remove('liked');
-                    } else {
-                        icon.classList.replace('far', 'fas');
-                        count.textContent = parseInt(count.textContent) + 1;
-                        likeBtn.classList.add('liked');
-                    }
-                });
-                
-                commentBtn.addEventListener('click', () => {
-                    commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
-                });
-                
-                commentForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const input = commentForm.querySelector('.comment-input');
-                    const text = input.value.trim();
-                    
-                    if (text) {
-                        const comment = document.createElement('div');
-                        comment.className = 'comment';
-                        comment.innerHTML = `
-                            <div class="comment-avatar">
-                                <i class="fas fa-user"></i>
+                            
+                            <div class="emoji-picker" id="emoji-picker">
+                                <!-- Emojis will be added by JS -->
                             </div>
-                            <div class="comment-content">
-                                <div class="comment-header">
-                                    <span class="comment-author">${user.username}</span>
-                                    <span class="comment-time">только что</span>
-                                </div>
-                                <p class="comment-text">${text}</p>
-                                <div class="comment-actions">
-                                    <button class="action-btn">
-                                        <i class="far fa-thumbs-up"></i> <span>0</span>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                        
-                        commentsList.appendChild(comment);
-                        input.value = '';
-                        
-                        // Update comment count
-                        const commentCount = commentBtn.querySelector('span');
-                        commentCount.textContent = parseInt(commentCount.textContent) + 1;
-                    }
-                });
-                
-                videosContainer.appendChild(videoCard);
-            });
-            
-            // Sample renders
-            const sampleRenders = [
-                {
-                    title: 'Горный пейзаж',
-                    author: 'Художник',
-                    likes: Math.floor(Math.random() * 30)
-                },
-                {
-                    title: 'Подводный мир',
-                    author: 'Исследователь',
-                    likes: Math.floor(Math.random() * 30)
-                },
-                {
-                    title: 'Замок в облаках',
-                    author: 'Строитель',
-                    likes: Math.floor(Math.random() * 30)
-                }
-            ];
-            
-            sampleRenders.forEach(render => {
-                const renderCard = document.createElement('div');
-                renderCard.className = 'render-card';
-                renderCard.innerHTML = `
-                    <img src="https://via.placeholder.com/300x200/253341/8899A6?text=${encodeURIComponent(render.title)}" class="render-image">
-                    <div class="render-info">
-                        <h3 class="render-title">${render.title}</h3>
-                        <p class="render-author">${render.author}</p>
-                        <div class="render-actions">
-                            <button class="action-btn like-btn ${Math.random() > 0.7 ? 'liked' : ''}">
-                                <i class="${Math.random() > 0.7 ? 'fas' : 'far'} fa-heart"></i> <span>${render.likes}</span>
-                            </button>
                         </div>
                     </div>
-                `;
+                </section>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Auth modals -->
+    <div class="auth-modal" id="login-modal">
+        <div class="auth-content">
+            <div class="auth-header">
+                <h2 class="auth-title">Вход в аккаунт</h2>
+                <p class="auth-subtitle">Введите свои данные для входа</p>
+            </div>
+            
+            <form class="auth-form" id="login-form">
+                <div class="form-group">
+                    <label for="login-username" class="form-label">Имя пользователя</label>
+                    <input type="text" id="login-username" class="form-input" placeholder="Ваш никнейм" required>
+                </div>
                 
-                // Add event listener for like button
-                const likeBtn = renderCard.querySelector('.like-btn');
-                likeBtn.addEventListener('click', () => {
-                    const icon = likeBtn.querySelector('i');
-                    const count = likeBtn.querySelector('span');
-                    
-                    if (likeBtn.classList.contains('liked')) {
-                        icon.classList.replace('fas', 'far');
-                        count.textContent = parseInt(count.textContent) - 1;
-                        likeBtn.classList.remove('liked');
-                    } else {
-                        icon.classList.replace('far', 'fas');
-                        count.textContent = parseInt(count.textContent) + 1;
-                        likeBtn.classList.add('liked');
-                    }
-                });
+                <div class="form-group">
+                    <label for="login-password" class="form-label">Пароль</label>
+                    <input type="password" id="login-password" class="form-input" placeholder="Ваш пароль" required>
+                </div>
                 
-                rendersContainer.appendChild(renderCard);
-            });
-        }
-        
-        // Initialize the app
-        init();
-    </script>
-</body>
-</html>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Войти</button
