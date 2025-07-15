@@ -3,291 +3,528 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тихий Мир - 3D фон + проверка ID</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+    <title>Социальный Мессенджер</title>
     <style>
-        /* Стили для 3D фона */
-        #scene-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
+        :root {
+            --primary-color: #4285f4;
+            --secondary-color: #34a853;
+            --accent-color: #ea4335;
+            --light-gray: #f1f1f1;
+            --dark-gray: #333;
+            --text-color: #212121;
+            --text-light: #757575;
         }
-        
-        /* Стили для интерфейса проверки */
-        body {
+
+        * {
             margin: 0;
-            font-family: 'Montserrat', sans-serif;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Боковая панель */
+        .sidebar {
+            width: 300px;
+            background-color: white;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            overflow-x: hidden;
-        }
-        
-        .container {
-            background: rgba(30, 30, 30, 0.8);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.6);
-            max-width: 500px;
-            width: 90%;
-            margin: 5vh auto;
-            position: relative;
-        }
-        
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px rgba(0, 150, 255, 0.5);
-            text-align: center;
-        }
-        
-        .btn {
-            display: block;
-            padding: 15px;
-            margin: 15px auto;
-            font-size: 1.2rem;
-            font-weight: 700;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 100%;
-            max-width: 300px;
-            color: white;
-        }
-        
-        .btn-newbie {
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
-        }
-        
-        .btn-member {
-            background: linear-gradient(90deg, #ff7e5f, #feb47b);
-        }
-        
-        .btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        #idCheckScreen {
-            display: none;
-        }
-        
-        .id-input {
-            padding: 15px;
-            margin: 20px auto;
-            width: 100%;
-            max-width: 300px;
-            border-radius: 50px;
-            border: none;
-            font-size: 1rem;
-            text-align: center;
-            display: block;
-            background: rgba(255,255,255,0.9);
-        }
-        
-        #result {
-            margin: 20px auto;
-            padding: 15px;
-            border-radius: 50px;
-            max-width: 300px;
             font-weight: bold;
+        }
+
+        .search-bar {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .conversations {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .conversation {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .conversation:hover {
+            background-color: var(--light-gray);
+        }
+
+        .conversation-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .conversation-info {
+            flex: 1;
+        }
+
+        .conversation-name {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .conversation-last-message {
+            font-size: 0.9em;
+            color: var(--text-light);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Основное окно чата */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-header {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            background-color: white;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            max-width: 70%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-incoming {
+            align-items: flex-start;
+        }
+
+        .message-outgoing {
+            align-items: flex-end;
+            margin-left: auto;
+        }
+
+        .message-sender {
+            font-weight: 500;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .message-content {
+            padding: 10px 15px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message-incoming .message-content {
+            background-color: white;
+            border-top-left-radius: 0;
+        }
+
+        .message-outgoing .message-content {
+            background-color: var(--primary-color);
+            color: white;
+            border-top-right-radius: 0;
+        }
+
+        .message-time {
+            font-size: 0.8em;
+            color: var(--text-light);
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message-reactions {
+            display: flex;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .reaction {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            padding: 2px 8px;
+            font-size: 0.8em;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .reaction-count {
+            margin-left: 5px;
+            color: var(--text-light);
+        }
+
+        .youtube-embed {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 10px;
+        }
+
+        .youtube-embed iframe {
+            width: 100%;
+            height: 280px;
+            border-radius: 8px;
+            border: none;
+        }
+
+        .fact-box, .question-box {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 10px;
+        }
+
+        .question-box {
+            background-color: #e3f2fd;
+            border-left-color: var(--primary-color);
+        }
+
+        .message-actions {
+            display: flex;
+            margin-top: 5px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 0.9em;
+            margin-right: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .action-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .chat-input {
+            padding: 15px;
+            background-color: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-input textarea {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            resize: none;
+            height: 40px;
+            max-height: 120px;
+        }
+
+        .chat-input-actions {
+            display: flex;
+            margin-left: 10px;
+        }
+
+        .input-action-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: var(--text-light);
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .input-action-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .send-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .send-btn:hover {
+            background-color: #3367d6;
+        }
+
+        /* Всплывающее меню реакций */
+        .reactions-panel {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 5px;
             display: none;
-            text-align: center;
+            z-index: 10;
         }
-        
-        .success {
-            background: linear-gradient(90deg, #4CAF50, #2E7D32);
-            display: block !important;
-            color: white;
+
+        .reactions-panel.show {
+            display: flex;
         }
-        
-        .error {
-            background: linear-gradient(90deg, #f44336, #c62828);
-            display: block !important;
-            color: white;
+
+        .reaction-option {
+            font-size: 1.5em;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
-        
-        .back-btn {
-            background: linear-gradient(90deg, #9e9e9e, #616161);
+
+        .reaction-option:hover {
+            transform: scale(1.2);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+            .conversation-info, .user-name {
+                display: none;
+            }
+            .conversation-avatar {
+                margin-right: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Контейнер для 3D сцены -->
-    <div id="scene-container"></div>
-    
-    <!-- Интерфейс проверки ID -->
-    <div class="container" id="mainScreen">
-        <h1>Добро пожаловать в "Тихий Мир"</h1>
-        <button class="btn btn-newbie" id="newbieBtn">Я новичок</button>
-        <button class="btn btn-member" id="memberBtn">Я участник</button>
+    <!-- Боковая панель с чатами -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="user-profile">
+                <div class="user-avatar">И</div>
+                <span class="user-name">Иван Иванов</span>
+            </div>
+            <button class="input-action-btn">⋮</button>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Поиск...">
+        </div>
+        <div class="conversations">
+            <div class="conversation">
+                <div class="conversation-avatar">А</div>
+                <div class="conversation-info">
+                    <div class="conversation-name">Алексей Петров</div>
+                    <div class="conversation-last-message">Привет! Как дела?</div>
+                </div>
+            </div>
+            <div class="conversation">
+                <div class="conversation-avatar">М</div>
+                <div class="conversation-info">
+                    <div class="conversation-name">Мария Сидорова</div>
+                    <div class="conversation-last-message">Посмотри это видео →</div>
+                </div>
+            </div>
+            <div class="conversation">
+                <div class="conversation-avatar">Г</div>
+                <div class="conversation-info">
+                    <div class="conversation-name">Группа "Путешествия"</div>
+                    <div class="conversation-last-message">Алексей: Кто хочет в поход?</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="container" id="idCheckScreen">
-        <h1>Проверка участника</h1>
-        <input type="text" class="id-input" id="userIdInput" placeholder="Введите ваш ID">
-        <button class="btn btn-member" id="checkIdBtn">Проверить ID</button>
-        <div id="result"></div>
-        <button class="btn back-btn" id="backBtn">Назад</button>
-    </div>
+    <!-- Основное окно чата -->
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-title">Алексей Петров</div>
+        </div>
+        <div class="chat-messages">
+            <!-- Входящее сообщение -->
+            <div class="message message-incoming">
+                <div class="message-sender">Алексей Петров</div>
+                <div class="message-content">
+                    Привет! Как твои дела?
+                    <div class="message-time">10:30</div>
+                </div>
+                <div class="message-reactions">
+                    <div class="reaction">
+                        👍 <span class="reaction-count">2</span>
+                    </div>
+                    <div class="reaction">
+                        😂 <span class="reaction-count">1</span>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Three.js библиотеки -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/OBJLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+            <!-- Исходящее сообщение -->
+            <div class="message message-outgoing">
+                <div class="message-content">
+                    Привет! Все отлично, спасибо!
+                    <div class="message-time">10:32</div>
+                </div>
+                <div class="message-actions">
+                    <button class="action-btn">👍</button>
+                    <button class="action-btn">😂</button>
+                    <button class="action-btn">❤️</button>
+                </div>
+            </div>
+
+            <!-- Сообщение с YouTube видео -->
+            <div class="message message-incoming">
+                <div class="message-sender">Алексей Петров</div>
+                <div class="message-content">
+                    Посмотри это крутое видео!
+                    <div class="youtube-embed">
+                        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="message-time">10:35</div>
+                </div>
+                <div class="message-reactions">
+                    <div class="reaction">
+                        ❤️ <span class="reaction-count">3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Сообщение с интересным фактом -->
+            <div class="message message-outgoing">
+                <div class="message-content">
+                    Кстати, знал ли ты, что...
+                    <div class="fact-box">
+                        Медведи гризли могут бегать со скоростью до 50 км/ч, что быстрее, чем средний человек!
+                    </div>
+                    <div class="message-time">10:40</div>
+                </div>
+            </div>
+
+            <!-- Сообщение с вопросом -->
+            <div class="message message-incoming">
+                <div class="message-sender">Алексей Петров</div>
+                <div class="message-content">
+                    <div class="question-box">
+                        Какой твой любимый фильм?
+                    </div>
+                    <div class="message-time">10:42</div>
+                </div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <textarea placeholder="Написать сообщение..."></textarea>
+            <div class="chat-input-actions">
+                <button class="input-action-btn">📎</button>
+                <button class="input-action-btn">🎥</button>
+                <button class="input-action-btn">😊</button>
+            </div>
+            <button class="send-btn">→</button>
+        </div>
+    </div>
 
     <script>
-        // ==================== 3D ФОН ====================
-        // 1. Инициализация Three.js сцены
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0x000000, 0);
-        document.getElementById('scene-container').appendChild(renderer.domElement);
-
-        // 2. Освещение
-        const light1 = new THREE.DirectionalLight(0xffffff, 0.8);
-        light1.position.set(1, 1, 1);
-        scene.add(light1);
-        
-        const light2 = new THREE.AmbientLight(0x404040);
-        scene.add(light2);
-
-        // 3. Загрузка OBJ модели
-        const objLoader = new THREE.OBJLoader();
-        let model;
-        
-        // ЗАМЕНИТЕ НА ПУТЬ К ВАШЕМУ ФАЙЛУ .obj
-        objLoader.load(
-            'model.obj', // Ваш файл модели
-            (object) => {
-                model = object;
+        // Простой скрипт для демонстрации реакций
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const reaction = this.textContent.trim();
+                const message = this.closest('.message');
+                let reactionsContainer = message.querySelector('.message-reactions');
                 
-                // Настройки модели
-                model.scale.set(0.5, 0.5, 0.5);
-                model.position.set(0, 0, 0);
-                
-                // Центрирование
-                const box = new THREE.Box3().setFromObject(model);
-                const center = box.getCenter(new THREE.Vector3());
-                model.position.sub(center);
-                
-                scene.add(model);
-            },
-            (xhr) => {
-                console.log((xhr.loaded / xhr.total * 100) + '% загружено');
-            },
-            (error) => {
-                console.error('Ошибка загрузки модели:', error);
-            }
-        );
-
-        // 4. Настройка камеры
-        camera.position.z = 5;
-
-        // 5. Анимация
-        let time = 0;
-        function animate3D() {
-            requestAnimationFrame(animate3D);
-            time += 0.01;
-            
-            if(model) {
-                // Плавное вращение и движение
-                model.rotation.x = Math.sin(time * 0.5) * 0.2;
-                model.rotation.y += 0.005;
-                model.position.x = Math.sin(time) * 2;
-                model.position.z = Math.cos(time * 2) * 1.5;
-                model.position.y = Math.sin(time * 1.7) * 1;
-            }
-            
-            renderer.render(scene, camera);
-        }
-        animate3D();
-
-        // 6. Адаптивность
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // ==================== ПРОВЕРКА ID ====================
-        // Конфигурация
-        const CORRECT_ID = "8795929212908301723";
-        
-        // Элементы интерфейса
-        const mainScreen = document.getElementById('mainScreen');
-        const idCheckScreen = document.getElementById('idCheckScreen');
-        const newbieBtn = document.getElementById('newbieBtn');
-        const memberBtn = document.getElementById('memberBtn');
-        const checkIdBtn = document.getElementById('checkIdBtn');
-        const backBtn = document.getElementById('backBtn');
-        const userIdInput = document.getElementById('userIdInput');
-        const resultDiv = document.getElementById('result');
-
-        // Показываем экран проверки ID
-        memberBtn.addEventListener('click', function() {
-            mainScreen.style.display = 'none';
-            idCheckScreen.style.display = 'block';
-            userIdInput.focus();
-        });
-
-        // Возврат на главный экран
-        backBtn.addEventListener('click', function() {
-            idCheckScreen.style.display = 'none';
-            mainScreen.style.display = 'block';
-            userIdInput.value = '';
-            resultDiv.style.display = 'none';
-        });
-
-        // Проверка ID
-        checkIdBtn.addEventListener('click', function() {
-            const userInput = userIdInput.value.trim();
-            
-            if (!userInput) {
-                showResult("Введите ID", "error");
-                return;
-            }
-            
-            if (userInput.length !== CORRECT_ID.length) {
-                showResult("Неверная длина ID", "error");
-                return;
-            }
-            
-            // Имитация проверки с задержкой
-            setTimeout(() => {
-                if (userInput === CORRECT_ID) {
-                    showResult("✅ ID подтверждён! Доступ разрешён.", "success");
-                    // Здесь можно добавить перенаправление
-                    // window.location.href = "member_area.html";
-                } else {
-                    showResult("❌ Неверный ID. Попробуйте ещё раз.", "error");
+                if (!reactionsContainer) {
+                    reactionsContainer = document.createElement('div');
+                    reactionsContainer.className = 'message-reactions';
+                    message.appendChild(reactionsContainer);
                 }
-            }, 500);
+                
+                const existingReaction = reactionsContainer.querySelector(`.reaction:contains('${reaction}')`);
+                
+                if (existingReaction) {
+                    const countElement = existingReaction.querySelector('.reaction-count');
+                    const count = parseInt(countElement.textContent) + 1;
+                    countElement.textContent = count;
+                } else {
+                    const newReaction = document.createElement('div');
+                    newReaction.className = 'reaction';
+                    newReaction.innerHTML = `${reaction} <span class="reaction-count">1</span>`;
+                    reactionsContainer.appendChild(newReaction);
+                }
+            });
         });
 
-        // Обработка кнопки "Я новичок"
-        newbieBtn.addEventListener('click', function() {
-            alert("Добро пожаловать, новичок! Скоро здесь будет информация для вас.");
-        });
-
-        // Показ результата проверки
-        function showResult(message, type) {
-            resultDiv.textContent = message;
-            resultDiv.className = type;
-            resultDiv.style.display = 'block';
-        }
-
-        // Разрешаем проверку по нажатию Enter
-        userIdInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                checkIdBtn.click();
-            }
-        });
+        // Полифил для :contains()
+        jQuery.expr[':'].contains = function(a, i, m) {
+            return jQuery(a).text().toUpperCase().indexOf(m[3].toUpperCase()) >= 0;
+        };
     </script>
 </body>
 </html>
